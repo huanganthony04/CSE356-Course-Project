@@ -8,7 +8,7 @@ const PORT = 8080;
 
 //Add custom header
 app.use((req, res, next) => {
-    res.header('X-CSE-356', '66d155ec7f77bf55c50044bf');
+    res.header('X-CSE356', '66d155ec7f77bf55c50044bf');
     next();
 });
 
