@@ -1,39 +1,45 @@
-
 const express = require('express');
-const { MongoClient } = require('mongodb');
-const userRoutes = require('./routes/userRoutes');
+const session = require("express-session");
+require('dotenv').config();
 
+const MongoDBSession = require("connect-mongodb-session")(session);
+const mongoose = require('mongoose');
+
+const userRoutes = require('./routes/userRoutes');
+const videoRoutes = require('./routes/videoRoutes');
 
 const app = express();
-
 const PORT = 8080;
 
+const mongoURI = 'mongodb://localhost:27017/CSE356';
+
 //Set up connection to mongo client
-const uri = 'mongodb://localhost:27017';
-const dbName = 'CSE356';
+mongoose.connect(mongoURI)
+    .then(() => console.log('Connected to MongoDB'));
 
-const client = new MongoClient(uri, {});
+const store = new MongoDBSession({
+    uri: mongoURI,
+    collection: 'sessions'
+});
 
-async function startServer() {
-    try {
-        await client.connect();
-        console.log('Connected to Mongo');
-    } catch (e) {
-        console.error('Error connecting to Mongo', e);
-    }
-    app.use(express.json());
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: store
+}));
 
-    app.use((req, res, next) => {
+
+app.use(express.json());
+app.use((req, res, next) => {
     res.header('X-CSE356', '66d155ec7f77bf55c50044bf');
     next();
-    });
+});
 
-    const db = client.db(dbName);
+app.use('', userRoutes);
+app.use('', videoRoutes);
 
-    app.use('', userRoutes(db));
 
-    app.listen(PORT);
+app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-}
-
-startServer();
+});
