@@ -35,12 +35,6 @@ router.post('/adduser', async (req, res) => {
         verified: false,
         verificationKey: key
     });
-    
-    //Save the user
-    await user.save().catch((err) => {
-        return res.status(200).json({ status: 'ERROR', error: 'true', message: `${err}` })
-    });
-
 
     //Send the verification email
     const transporter = nodemailer.createTransport({
@@ -52,28 +46,30 @@ router.post('/adduser', async (req, res) => {
         }
     });
 
+    const link = `http://anthonysgroup.cse356.compas.cs.stonybrook.edu/verify?email=${encodeURIComponent(email)}&key=${key}`;
+
     const mailOptions = {
-        from: 'no-reply@anthonysgroup.cse356.compas.cs.stonybrook.edu',
+        from: 'root@anthonysgroup.cse356.compas.cs.stonybrook.edu',
         to: email,
         subject: 'Verify your email',
-        html: 
-            ` 
-                <p>Hello ${username},</p>
-                <p>Click the following link to verify your email: </p>
-                <a href="http://anthonysgroup.cse356.compas.cs.stonybrook.edu/verify?email=${email}&key=${key}">http://anthonysgroup.cse356.compas.cs.stonybrook.edu/verify?email=${email}&key=${key}</a>
-            `
+        text: `Please verify your email using the following link: ${link}`
     };
-    transporter.sendMail(mailOptions)
-        .then(() => {
-            return res.status(200).json({ status: 'OK', error: 'false', message: 'User added and email sent successfully' });
-        })
-        .catch((err) => {
-            return res.status(200).json({ status: 'ERROR', error: 'true', message: 'Error sending email' });
-        });
+    await transporter.sendMail(mailOptions).catch((err) => {
+        return res.status(200).json({ status: 'ERROR', error: 'true', message: `${err}` })
+    });
+
+    //Save the user
+    await user.save().catch((err) => {
+        return res.status(200).json({ status: 'ERROR', error: 'true', message: `${err}` })
+    });
+
+    return res.status(200).json({ status: 'OK' });
 });
 
 router.get('/verify', async (req, res) => {
-    const { email, key } = req.query;
+    let { email, key } = req.query;
+    email = decodeURIComponent(email);
+    console.log('Verifying' + email, key);
     if (!email || !key) {
         return res.status(200).json({ status: 'ERROR', error: 'true', message: 'Missing required fields' });
     }
