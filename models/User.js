@@ -16,7 +16,10 @@ const UsersSchema = new Schema({
         unique: true,
         required: true
     },
-    verified: Boolean
+    verified: Boolean,
+    verificationKey: {
+        type: String
+    }
 });
 
 module.exports = mongoose.model('Users', UsersSchema);
