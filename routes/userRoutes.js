@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/adduser', async (req, res) => {
     const { username, password, email } = req.body;
     if (!username || !password || !email) {
-        return res.status(200).json({ status: 'error', error: 'true', message: 'Missing required fields' });
+        return res.status(200).json({ status: 'ERROR', error: 'true', message: 'Missing required fields' });
     }
     //Check if the username already exists
     let existingUser = await UserModel.findOne({
@@ -18,7 +18,7 @@ router.post('/adduser', async (req, res) => {
         ]
     });
     if (existingUser) {
-        return res.status(200).json({ status: 'error', error: 'true', message: 'User already exists' });
+        return res.status(200).json({ status: 'ERROR', error: 'true', message: 'User already exists' });
     }
 
     //Create the UserModel
@@ -33,26 +33,26 @@ router.post('/adduser', async (req, res) => {
     //Save the user
     user.save()
         .then(() => {
-            return res.status(200).json({ status: 'error', error: 'false', message: 'User created successfully' });
+            return res.status(200).json({ status: 'OK', error: 'false', message: 'User created successfully' });
         })
         .catch((err) => {
-            return res.status(200).json({ status: 'error', error: 'true', message: 'Error creating user' });
+            return res.status(200).json({ status: 'ERROR', error: 'true', message: 'Error creating user' });
         });
 });
 
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
-        return res.status(200).json({ status: 'error', error: 'true', message: 'Missing required fields' });
+        return res.status(200).json({ status: 'ERROR', error: 'true', message: 'Missing required fields' });
     }
     const user = await UserModel.findOne({ username });
     if (!user) {
-        return res.status(200).json({ status: 'error', error: 'true', message: 'User does not exist' });
+        return res.status(200).json({ status: 'ERROR', error: 'true', message: 'User does not exist' });
     }
     
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-        return res.status(200).json({ status: 'error', error: 'true', message: 'Invalid credentials' });
+        return res.status(200).json({ status: 'ERROR', error: 'true', message: 'Invalid credentials' });
     }
     req.session.isAuth = true;
     res.redirect('/');
@@ -60,7 +60,7 @@ router.post('/login', async (req, res) => {
 
 router.post('/logout', (req, res) => {
     if (!req.session.isAuth) {
-        return res.status(200).json({ status: 'error', error: 'true', message: 'You are not logged in' });
+        return res.status(200).json({ status: 'ERROR', error: 'true', message: 'You are not logged in' });
     }
     req.session.destroy();
     res.clearCookie('connect.sid');
