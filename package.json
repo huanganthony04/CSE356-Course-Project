@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/huanganthony04/CSE-356-WP2#readme",
   "dependencies": {
-    "express": "^4.21.0"
+    "bcrypt": "^5.1.1",
+    "express": "^4.21.0",
+    "mongodb": "^6.9.0"
   }
 }
