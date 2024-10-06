@@ -15,6 +15,10 @@ router.get('/', isAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'video.html'));
 });
 
+router.get('/debug', (req,res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'video.html'));
+});
+
 router.get('/media/output.mpd', isAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'media', 'output.mpd'));
 })
