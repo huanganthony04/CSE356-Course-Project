@@ -20,7 +20,7 @@ video {
     border-style: solid;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     .play-pause-button{
         float: left;
         width: 30px;
@@ -46,7 +46,26 @@ video {
     }
 
     .resolution-menu{
-        position: absolute;
+        top:210px;
+        border: black;
+        border-width: 1px;
+        border-style: solid;
+        background-color: grey;
+        color:white;
+        position:absolute;
+        ul{
+            margin-top: 5px;
+            margin-bottom: 5px;
+            list-style-type: none;
+            padding-left: 5px;
+            li{
+                margin: 2px;
+                border:black;
+                border-width: 1px;
+                border-style: solid;
+                text-align: center;
+            }
+        }
     }
 }
 
