@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const session = require("express-session");
 const router = express.Router();
 
@@ -10,8 +11,8 @@ const isAuth = (req, res, next) => {
     }
 };
 
-router.get('/', isAuth, (req, res) => {
-    res.status(200).json({ status: 'OK', error: 'false', message: 'You are authorized' });
+router.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'video.html'));
 });
 
 module.exports = router;
