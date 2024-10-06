@@ -1,0 +1,71 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+.main-content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+video {
+    width: 640px;
+    height: 360px;
+}
+
+.video-controls{
+    border: black;
+    border-width: 2px;
+    border-style: solid;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    .play-pause-button{
+        float: left;
+        width: 30px;
+        padding:2px;
+    }
+
+    .change-resolution-menu{
+        float: right;
+        padding: 2px;
+    }
+
+    .seek-bar{
+        cursor: pointer;
+        height: 10px;
+        margin-bottom: 10px;
+        outline: thin-solid-orange;
+        overflow: hidden;
+        position: relative;
+        width: 80%;
+        border: black;
+        border-style: solid;
+        border-width: 1px;
+    }
+
+    .resolution-menu{
+        top:298px;
+        border: black;
+        border-width: 1px;
+        border-style: solid;
+        background-color: grey;
+        color:white;
+        position:absolute;
+        ul{
+            margin-top: 5px;
+            margin-bottom: 5px;
+            list-style-type: none;
+            padding-left: 5px;
+            li{
+                margin: 2px;
+                border:black;
+                border-width: 1px;
+                border-style: solid;
+                text-align: center;
+            }
+        }
+    }
+}
+
