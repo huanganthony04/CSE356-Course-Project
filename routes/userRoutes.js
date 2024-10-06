@@ -122,7 +122,7 @@ router.post('/login', async (req, res) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid credentials' });
     }
     req.session.isAuth = true;
-    res.redirect('/');
+    return res.status(200).json({ status: 'OK' });
 });
 
 router.post('/logout', (req, res) => {
