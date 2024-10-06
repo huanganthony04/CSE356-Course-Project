@@ -1,29 +1,102 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Dash.js Rocks</title>
-        <style>
-            video {
-                width: 640px;
-                height: 360px;
-            }
-        </style>
+        <title>Dash.js Sucks</title>
+        
+        <link rel="stylesheet" href="video.css">
     </head>
 <body>
-<h1>Hello World!</h1>
 
-<div>
-    <video id="videoPlayer" controls></video>
+<div id="mainContent" class="main-content">
+    <h1>Hello World!</h1>
+
+    <div id="video-container">
+        <video id="videoPlayer"></video>
+        <div id="videoControls" class="video-controls">
+            <div id="playPauseBtn" class="play-pause-button" onclick="pausePlayButton()">
+                <img style="width: 100%; height: 100%;" src="./media/images/play-circle.svg">
+            </div>
+            <div id="seekBar" class="seek-bar">
+                <span></span>
+            </div>
+            <input id="changeResolutionMenu" class="change-resolution-menu" type="button" value="Change Resolution" onclick="showResolutionMenu()">
+            <div id="resolutionMenu" class="resolution-menu">
+
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="./node_modules/dashjs/dist/dash.all.min.js"></script>
 <script src="./node_modules/dashjs/contrib/akamai/controlbar/ControlBar.js"></script>
 <script>
+
+    let url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+    let player;
+    let videoElement;
+    let videoEvents;
+    let availableQualities;
     (function(){
-        var url = "./media/test_manifest.mpd";
-        var player = dashjs.MediaPlayer().create();
-        player.initialize(document.querySelector("#videoPlayer"), url, true);
+        player = dashjs.MediaPlayer().create();
+        videoElement = document.querySelector("#videoPlayer");
+        player.initialize(videoElement, url, true);
+        videoEvents = dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED;
+        
+        let test = player.getQualityFor();
+        player.updateSettings({
+            'streaming': {
+                'abr': {
+                    'autoSwitchBitrate': {
+                        'video' : false
+                    }
+                }
+            }
+
+        });
+
+        setQualities()
+
     })();
+
+    function setQualities(){
+        availableBitrate = player.player.getBitrateInfoListFor('video');;
+        let bitRateList = ""
+        availableQualities.forEach(element => {
+            qualitiesList += `\
+            <li> ${element} </li>\
+            `
+        });
+    }
+
+    function pausePlayButton() {
+
+        if(player.isPaused()){
+            player.play();
+
+        }else{
+            player.pause();
+
+        }
+    }
+
+    function showResolutionMenu(){
+        player.setQualityFor('video',1,true);
+        test = player.getQualityFor('video');
+
+    }
+
+    player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, ()=>{
+        let percentage = player.time() / player.duration()
+    })
+
+    document.querySelector("#seekBar").addEventListener("click",function(e){
+        var offset = this.offsetLeft;
+        var left = (e.pageX-offset);
+        var totalWidth = this.offsetWidth;
+        var percentage = (left / totalWidth);
+        var vidTime = player.duration() * percentage;
+        player.seek(vidTime);
+    });
 </script>
 </body>
 </html>
