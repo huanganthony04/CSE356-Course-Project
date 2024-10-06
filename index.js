@@ -30,8 +30,6 @@ app.use(session({
     store: store
 }));
 
-app.use(express.static(path.join(__dirname, 'public')));
-
 app.use(express.json());
 app.use((req, res, next) => {
     res.header('X-CSE356', '66d155ec7f77bf55c50044bf');
@@ -41,6 +39,7 @@ app.use((req, res, next) => {
 app.use('', userRoutes);
 app.use('', videoRoutes);
 
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
