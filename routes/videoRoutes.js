@@ -45,4 +45,11 @@ router.get('/media/chunk_(\\d+)_(\\d+).m4s', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'media', `chunk_${bitrate}_${segment}.m4s`));
 });
 
+router.get('/media/chunk_*', (req, res) => {
+    const params = req.url.split('_');
+    const bitrate = params[1];
+    const segment = parseInt(params[2].substring(8, 10));
+    res.sendFile(path.join(__dirname, '..', 'public', 'media', `chunk_${bitrate}_${segment}.m4s`));
+});
+
 module.exports = router;
