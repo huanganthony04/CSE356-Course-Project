@@ -3,6 +3,8 @@ const path = require('path');
 const session = require("express-session");
 require('dotenv').config();
 
+const morgan = require('morgan');
+
 const MongoDBSession = require("connect-mongodb-session")(session);
 const mongoose = require('mongoose');
 
@@ -22,6 +24,8 @@ const store = new MongoDBSession({
     uri: mongoURI,
     collection: 'sessions'
 });
+
+app.use(morgan('combined'));
 
 app.use(session({
     secret: process.env.SESSION_SECRET,
