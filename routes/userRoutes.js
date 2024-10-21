@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 
 const router = express.Router();
 
-router.post('/adduser', async (req, res) => {
+router.post('/api/adduser', async (req, res) => {
     const { username, password, email } = req.body;
     if (!username || !password || !email) {
         console.log("Missing required fields");
@@ -72,7 +72,7 @@ router.post('/adduser', async (req, res) => {
     return res.status(200).json({ status: 'OK' });
 });
 
-router.get('/verify', async (req, res) => {
+router.get('/api/verify', async (req, res) => {
     let { email, key } = req.query;
     email = decodeURIComponent(email);
     console.log('Verifying' + email, key);
@@ -104,7 +104,7 @@ router.get('/verify', async (req, res) => {
     return res.status(200).json({ status: 'OK' });
 });
 
-router.post('/login', async (req, res) => {
+router.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing required fields' });
@@ -125,7 +125,7 @@ router.post('/login', async (req, res) => {
     return res.status(200).json({ status: 'OK' });
 });
 
-router.post('/logout', (req, res) => {
+router.post('/api/logout', (req, res) => {
     if (!req.session.isAuth) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'You are not logged in' });
     }
