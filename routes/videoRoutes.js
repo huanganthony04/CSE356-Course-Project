@@ -4,7 +4,7 @@ const session = require("express-session");
 const router = express.Router();
 
 const isAuth = (req, res, next) => {
-    if (req.session.isAuth) {
+    if (req.session.userId) {
         next();
     } else {
         res.status(200).json({ status: 'ERROR', error: 'true', message: 'Unauthorized' });

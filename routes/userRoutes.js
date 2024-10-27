@@ -121,12 +121,12 @@ router.post('/api/login', async (req, res) => {
     if (!isMatch) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid credentials' });
     }
-    req.session.isAuth = true;
+    req.session.userId = username;
     return res.status(200).json({ status: 'OK' });
 });
 
 router.post('/api/logout', (req, res) => {
-    if (!req.session.isAuth) {
+    if (!req.session.userId) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'You are not logged in' });
     }
     req.session.destroy();
@@ -135,10 +135,16 @@ router.post('/api/logout', (req, res) => {
 })
 
 router.get('/api/isloggedin', (req, res) => {
-    if (req.session.isAuth) {
+    if (req.session.userId) {
         return res.status(200).json({ status: 'OK' });
     }
     return res.status(200).json({ status: 'ERROR', error: true, message: 'You are not logged in' });
 });
 
+router.post('/api/check-auth', (req, res) => {
+    if (req.session.userId) {
+        return res.status(200).json({ isLoggedIn: true, userId: req.session.userId });
+    }
+    return res.status(200).json({ status: 'ERROR', error: true, message: 'You are not logged in' });
+})
 module.exports = router;
