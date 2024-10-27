@@ -47,7 +47,7 @@ router.post('/api/adduser', async (req, res) => {
         }
     });
 
-    const link = `http://anthonysgroup.cse356.compas.cs.stonybrook.edu/verify?email=${encodeURIComponent(email)}&key=${key}`;
+    const link = `http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/verify?email=${encodeURIComponent(email)}&key=${key}`;
 
     const mailOptions = {
         from: 'root@anthonysgroup.cse356.compas.cs.stonybrook.edu',
@@ -133,5 +133,12 @@ router.post('/api/logout', (req, res) => {
     res.clearCookie('connect.sid');
     res.status(200).json({ status: 'OK' });
 })
+
+router.get('/api/isloggedin', (req, res) => {
+    if (req.session.isAuth) {
+        return res.status(200).json({ status: 'OK' });
+    }
+    return res.status(200).json({ status: 'ERROR', error: true, message: 'You are not logged in' });
+});
 
 module.exports = router;
