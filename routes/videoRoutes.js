@@ -38,7 +38,7 @@ router.post('/api/videos', isAuth, (req, res) => {
         let j = i % videoIDs.length;
         response.push({ title: videoIDs[j] , description: videoData[videoIDs[j]] });
     }
-    return res.status(200).json(response);
+    return res.status(200).json({ status: 'OK', videos: response });
 });
 
 module.exports = router;

@@ -14,7 +14,7 @@ const Videos = () => {
         axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos', {count: 29}, { withCredentials: true })
             .then((response) => {
                 console.log(videos);
-                setVideos(videos.concat(response.data));
+                setVideos(videos.concat(response.data.videos));
             });
     }
 
