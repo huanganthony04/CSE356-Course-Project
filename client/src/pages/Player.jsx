@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect,useState } from 'react'
 import { useParams } from 'react-router-dom'
 import * as dashjs from 'dashjs'
@@ -42,7 +43,7 @@ const Player = () => {
 
         });
         setmpegdashPlayer(internalPlayer);
-    },[])
+    },[videoId])
 
     function pausePlayButton() {
 
