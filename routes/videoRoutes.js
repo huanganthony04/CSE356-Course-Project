@@ -21,7 +21,7 @@ router.get('/api/', isAuth, (req, res) => {
 });
 
 router.get('/api/manifest/:id', isAuth, (req, res) => {
-    //TODO
+    res.sendFile(path.join(__dirname, '..', 'public', 'media', 'videos', `${req.params.id}_dir`, `${req.params.id}.mpd`));
 });
 
 router.get('/api/thumbnail/:id', isAuth, (req, res) => {
