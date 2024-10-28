@@ -1,6 +1,7 @@
 import React, { useEffect,useState } from 'react'
 import { useParams } from 'react-router-dom'
 import * as dashjs from 'dashjs'
+import axios from 'axios'
 import "./stylesheets/video.css"
 import playButton from "./img/play-circle.svg"
 import no12x16video from "./3960164-uhd_2160_4096_25fps_dir/3960164-uhd_2160_4096_25fps.mpd"
@@ -17,7 +18,11 @@ const Player = () => {
         
         url = no12x16video;
         (async ()=>{
-
+            //Get all the videos
+            //Then get the manifests of a few of them (load 3 manifests at a time)
+            //When scrolling switch the video
+            //Then use the history API to change the URL https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
+            await axios.get(`http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/manifest/${videoId}`)
         }
         )();
         let videoElement;
