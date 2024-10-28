@@ -31,9 +31,9 @@ const idToMPD = {
 //PlayerContainer
 //- Responsible for the getting of the manifest and playing the video itself
 // - General Procedure:
-// - Get all the videos (Player)
-// - Then get the manifests of a few of them (load 3 manifests at a time) (PlayerContainer)
-// - When scrolling switch the video (We're just adding them to the end, Player)
+// - Get three video IDs (Player)
+// - When scrolling append the new video to the end (Player)
+// - Load the manifest (PlayerContainer)
 // - Then use the history API to change the URL https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method (Player)
 
 const Player = () => {
@@ -106,20 +106,9 @@ function PlayerContainer({videoID}){
     useEffect(() =>{
         //Get video from the videoID
         
-        let url;
         let manifest;
         //TEST CODE ONLY
         manifest = idToMPD[videoID];
-        (async ()=>{
-            //Get all the videos
-            //Then get the manifests of a few of them (load 3 manifests at a time)
-            //When scrolling switch the video
-            //Then use the history API to change the URL https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
-
-            let response = await axios.get(`http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/manifest/${videoID}`)
-            manifest = response.data
-        }
-        )();
 
         let videoElement;
         let internalPlayer = dashjs.MediaPlayer().create()
@@ -138,6 +127,54 @@ function PlayerContainer({videoID}){
 
         });
         setmpegdashPlayer(internalPlayer);
+        //Real code used to make the request
+        // (async ()=>{
+        //     //Get all the videos
+        //     //Then get the manifests of a few of them (load 3 manifests at a time)
+        //     //When scrolling switch the video
+        //     //Then use the history API to change the URL https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
+
+        //     let response = await axios.get(`http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/manifest/${videoID}`)
+        //     manifest = response.data
+        //     let videoElement;
+        //     let internalPlayer = dashjs.MediaPlayer().create()
+            
+        //     videoElement = refToVideo.current;
+        //     internalPlayer.initialize(videoElement, manifest, true);
+            
+        //     internalPlayer.updateSettings({
+        //         'streaming': {
+        //             'abr': {
+        //                 'autoSwitchBitrate': {
+        //                     'video' : false
+        //                 }
+        //             }
+        //         }
+
+        //     });
+        //     setmpegdashPlayer(internalPlayer);
+        // }
+
+        // )();
+        //This is for changing URLS
+        let observer;
+
+        let options = {
+          root: null,
+          rootMargin: "0px",
+          threshold: 1.0,
+        };
+      
+        let handleIntersect = (entries,observer) =>{
+            entries.forEach((entry)=>{
+                if(entry.isIntersecting){
+                    history.pushState(null,"",videoID)
+                }
+            })
+        }
+        observer = new IntersectionObserver(handleIntersect, options);
+        observer.observe(refToTop.current);
+        observer.observe(refToBottom.current);
 
 
     },[videoID])
