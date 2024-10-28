@@ -77,7 +77,7 @@ const Player = () => {
         <div className='infinite-scroll-container'>
             <InfiniteScroll
                 dataLength={allVideos.length}
-                next={fetchTestData}
+                next={fetchMoreData}
                 hasMore={true}
                 loader={<h4>Loading...</h4>}
                 onScroll={console.log("hi!")}
@@ -108,54 +108,54 @@ function PlayerContainer({videoID}){
         
         let manifest;
         //TEST CODE ONLY
-        manifest = idToMPD[videoID];
+        // manifest = idToMPD[videoID];
 
-        let videoElement;
-        let internalPlayer = dashjs.MediaPlayer().create()
+        // let videoElement;
+        // let internalPlayer = dashjs.MediaPlayer().create()
         
-        videoElement = refToVideo.current;
-        internalPlayer.initialize(videoElement, manifest, true);
+        // videoElement = refToVideo.current;
+        // internalPlayer.initialize(videoElement, manifest, true);
         
-        internalPlayer.updateSettings({
-            'streaming': {
-                'abr': {
-                    'autoSwitchBitrate': {
-                        'video' : false
-                    }
-                }
-            }
-
-        });
-        setmpegdashPlayer(internalPlayer);
-        //Real code used to make the request
-        // (async ()=>{
-        //     //Get all the videos
-        //     //Then get the manifests of a few of them (load 3 manifests at a time)
-        //     //When scrolling switch the video
-        //     //Then use the history API to change the URL https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
-
-        //     let response = await axios.get(`http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/manifest/${videoID}`)
-        //     manifest = response.data
-        //     let videoElement;
-        //     let internalPlayer = dashjs.MediaPlayer().create()
-            
-        //     videoElement = refToVideo.current;
-        //     internalPlayer.initialize(videoElement, manifest, true);
-            
-        //     internalPlayer.updateSettings({
-        //         'streaming': {
-        //             'abr': {
-        //                 'autoSwitchBitrate': {
-        //                     'video' : false
-        //                 }
+        // internalPlayer.updateSettings({
+        //     'streaming': {
+        //         'abr': {
+        //             'autoSwitchBitrate': {
+        //                 'video' : false
         //             }
         //         }
+        //     }
 
-        //     });
-        //     setmpegdashPlayer(internalPlayer);
-        // }
+        // });
+        // setmpegdashPlayer(internalPlayer);
+        //Real code used to make the request
+        (async ()=>{
+            //Get all the videos
+            //Then get the manifests of a few of them (load 3 manifests at a time)
+            //When scrolling switch the video
+            //Then use the history API to change the URL https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
 
-        // )();
+            let response = await axios.get(`http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/manifest/${videoID}`)
+            manifest = response.data
+            let videoElement;
+            let internalPlayer = dashjs.MediaPlayer().create()
+            
+            videoElement = refToVideo.current;
+            internalPlayer.initialize(videoElement, manifest, true);
+            
+            internalPlayer.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'autoSwitchBitrate': {
+                            'video' : false
+                        }
+                    }
+                }
+
+            });
+            setmpegdashPlayer(internalPlayer);
+        }
+
+        )();
         //This is for changing URLS
         let observer;
 
