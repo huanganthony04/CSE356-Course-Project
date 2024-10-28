@@ -1,12 +1,28 @@
 html,
 body {
-  height: 100%;
+  height: 105%;
   margin: 0;
+}
+#root{
+    height:100%;
+    width:100%;
+}
+.top-anchor{
+    width: 100%;
+    height: 1%;
+    margin-bottom: 200px;
+}
+.bottom-anchor{
+    width: 100%;
+    height: 1%;
+    margin-top: 200px;
 }
 .main-content{
     display: flex;
     flex-direction: column;
     align-items: center;
+    height: 800px;
+    margin-bottom: 1000px;
 }
 
 video {
@@ -15,7 +31,7 @@ video {
 }
 
 .video-controls{
-    border: black;
+    border: grey;
     border-width: 2px;
     border-style: solid;
     display: flex;
@@ -40,14 +56,14 @@ video {
         overflow: hidden;
         position: relative;
         width: 80%;
-        border: black;
+        border: grey;
         border-style: solid;
         border-width: 1px;
     }
 
     .resolution-menu{
         top:254px;
-        border: black;
+        border: white;
         border-width: 1px;
         border-style: solid;
         background-color: grey;
@@ -60,7 +76,7 @@ video {
             padding-left: 5px;
             li{
                 margin: 2px;
-                border:black;
+                border:white;
                 border-width: 1px;
                 border-style: solid;
                 text-align: center;
@@ -69,3 +85,7 @@ video {
     }
 }
 
+.infinite-scroll-container{
+    height: 100%;
+    width: 100%;
+}
