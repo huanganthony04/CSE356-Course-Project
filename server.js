@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const session = require("express-session");
+const cors = require('cors');
 require('dotenv').config();
 
 const morgan = require('morgan');
@@ -26,6 +27,15 @@ const store = new MongoDBSession({
 });
 
 app.use(morgan('combined'));
+
+//Added for communication with frontend through axios
+app.use(
+    cors({
+        origin: 'http://localhost:5173',
+        credentials: true,
+    })
+);
+
 
 app.use(session({
     secret: process.env.SESSION_SECRET,
