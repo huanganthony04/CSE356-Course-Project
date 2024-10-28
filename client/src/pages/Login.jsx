@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import './Login.css'
@@ -11,6 +11,17 @@ const Login = () => {
     const [ loginStatus, setLoginStatus ] = useState(0);
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+
+        //Get authorization. If the user is already logged in, redirect to main page.
+        axios.get('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/isloggedin', { withCredentials: true })
+            .then((response) => {
+                if (!response.data.error) {
+                    navigate('/');
+                }
+            })
+    }, []);
 
     const handleSubmit = (event) => {
         event.preventDefault();

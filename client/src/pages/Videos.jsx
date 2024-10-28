@@ -1,25 +1,21 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import VideoListElement from '../components/VideoListElement'
+import InfiniteScroll from 'react-infinite-scroll-component'
 
 const Videos = () => {
 
     const navigate = useNavigate();
+    const [videos, setVideos] = useState([]);
 
-    const checkAuth = async () => {
-        try {
-            const response = await axios.get('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/isloggedin', { withCredentials: true });
-            if (response.data.error) {
-                return false;
-            }
-            else {
-                return true;
-            }
-        }
-        catch(error) {
-            console.log('Could not get auth. ', error.message);
-            return false;
-        }
+    const fetchVideos = () => {
+        //Get list of videos to display
+        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos', {count: 29}, { withCredentials: true })
+            .then((response) => {
+                console.log(videos);
+                setVideos(videos.concat(response.data));
+            });
     }
 
     useEffect(() => {
@@ -32,10 +28,18 @@ const Videos = () => {
                 }
             })
 
+        fetchVideos();
+
     }, []);
 
+    const videosList = videos.map((video, i) =>
+        <VideoListElement key={i} id={video.title} description={video.description}/>
+    );
+
     return (
-        <div>Videos</div>
+        <InfiniteScroll dataLength={videos.length} next={fetchVideos} hasMore={true} loader={<h4>Loading...</h4>}>
+            {videosList}
+        </InfiniteScroll>
     )
 }
 

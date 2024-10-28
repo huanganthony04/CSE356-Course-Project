@@ -132,4 +132,6 @@ dist
 roadmap.txt
 new.txt
 
-./media/4781506-uhd_4096_2160_25fps.mp4
+# Ignore all the videos, way too big
+public/media/*
+public/videos/*
