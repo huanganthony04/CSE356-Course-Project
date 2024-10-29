@@ -8,22 +8,22 @@ import InfiniteScroll from "react-infinite-scroll-component";
 
 import "./stylesheets/video.css"
 import playButton from "./img/play-circle.svg"
-import video1 from "./testvideos/1580117-uhd_3840_2160_30fps_dir/1580117-uhd_3840_2160_30fps.mpd"
-import video2 from "./testvideos/2018959-hd_1920_1080_30fps_dir/2018959-hd_1920_1080_30fps.mpd"
-import video3 from "./testvideos/2892038-uhd_3840_2160_30fps_dir/2892038-uhd_3840_2160_30fps.mpd"
-import video4 from "./testvideos/3960164-uhd_2160_4096_25fps_dir/3960164-uhd_2160_4096_25fps.mpd"
-import video5 from "./testvideos/4008176-uhd_2160_4096_25fps_dir/4008176-uhd_2160_4096_25fps.mpd"
-import video6 from "./testvideos/4046200-hd_1920_1080_25fps_dir/4046200-hd_1920_1080_25fps.mpd"
+// import video1 from "./testvideos/1580117-uhd_3840_2160_30fps_dir/1580117-uhd_3840_2160_30fps.mpd"
+// import video2 from "./testvideos/2018959-hd_1920_1080_30fps_dir/2018959-hd_1920_1080_30fps.mpd"
+// import video3 from "./testvideos/2892038-uhd_3840_2160_30fps_dir/2892038-uhd_3840_2160_30fps.mpd"
+// import video4 from "./testvideos/3960164-uhd_2160_4096_25fps_dir/3960164-uhd_2160_4096_25fps.mpd"
+// import video5 from "./testvideos/4008176-uhd_2160_4096_25fps_dir/4008176-uhd_2160_4096_25fps.mpd"
+// import video6 from "./testvideos/4046200-hd_1920_1080_25fps_dir/4046200-hd_1920_1080_25fps.mpd"
 
 
-const idToMPD = {
-    "1580117-uhd_3840_2160_30fps": video1,
-    "2018959-hd_1920_1080_30fps": video2,
-    "2892038-uhd_3840_2160_30fps": video3,
-    "3960164-uhd_2160_4096_25fps": video4,
-    "4008176-uhd_2160_4096_25fps": video5,
-    "4046200-hd_1920_1080_25fps": video6
-}
+// const idToMPD = {
+//     "1580117-uhd_3840_2160_30fps": video1,
+//     "2018959-hd_1920_1080_30fps": video2,
+//     "2892038-uhd_3840_2160_30fps": video3,
+//     "3960164-uhd_2160_4096_25fps": video4,
+//     "4008176-uhd_2160_4096_25fps": video5,
+//     "4046200-hd_1920_1080_25fps": video6
+// }
 
 //Player
 // - Wrapper over the list of PlayerContainers
@@ -53,7 +53,7 @@ const Player = () => {
                 setAllVideos(
                     [
                         ...allVideos,
-                        buffer
+                        ...buffer
                     ]
                 )
 
@@ -128,34 +128,25 @@ function PlayerContainer({videoID}){
         // });
         // setmpegdashPlayer(internalPlayer);
         //Real code used to make the request
-        (async ()=>{
-            //Get all the videos
-            //Then get the manifests of a few of them (load 3 manifests at a time)
-            //When scrolling switch the video
-            //Then use the history API to change the URL https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
-
-            let response = await axios.get(`http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/manifest/${videoID}`)
-            manifest = response.data
-            let videoElement;
-            let internalPlayer = dashjs.MediaPlayer().create()
-            
-            videoElement = refToVideo.current;
-            internalPlayer.initialize(videoElement, manifest, true);
-            
-            internalPlayer.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'autoSwitchBitrate': {
-                            'video' : false
-                        }
+        manifest = `http://anthonysgroup.cse356.compas.cs.stonybrook.edu/media/${videoID}.mpd`
+        let videoElement;
+        let internalPlayer = dashjs.MediaPlayer().create()
+        
+        videoElement = refToVideo.current;
+        internalPlayer.initialize(videoElement, manifest, true);
+        
+        internalPlayer.updateSettings({
+            'streaming': {
+                'abr': {
+                    'autoSwitchBitrate': {
+                        'video' : false
                     }
                 }
+            }
 
-            });
-            setmpegdashPlayer(internalPlayer);
-        }
+        });
+        setmpegdashPlayer(internalPlayer);
 
-        )();
         //This is for changing URLS
         let observer;
 

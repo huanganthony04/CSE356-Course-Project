@@ -45,7 +45,7 @@ router.post('/api/videos', isAuth, (req, res) => {
     let response = [];
     for(let i = 0; i < req.body.count; i++) {
         let j = (i + videoCounter) % videoIDs.length;
-        response.push({ title: videoIDs[j] , description: videoData[videoIDs[j]] });
+        response.push({ id: videoIDs[j], title: videoIDs[j], description: videoData[videoIDs[j]] });
     }
     videoCounter += req.body.count;
     return res.status(200).json({ status: 'OK', videos: response });
