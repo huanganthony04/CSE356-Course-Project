@@ -46,8 +46,8 @@ do
     -hls_playlist false -f dash $i.mpd;
 done
 
-#Neets to be letterbox'd
-declare -a files=("5381274-uhd_4096_2160_30fps")
+#Neets to be letterbox'd instead
+declare -a files=("5381274-uhd_4096_2160_30fps" "1874710-hd_2048_1024_30fps")
 for i in "${files[@]}";
 do
 
@@ -64,6 +64,9 @@ do
     -use_timeline 1 -use_template 1 -window_size 5 -seg_duration 10 -media_seg_name "${i}_chunk_\$Bandwidth\$_\$Number\$.m4s" -init_seg_name "${i}_init-stream\$RepresentationID\$.\$ext\$" -adaptation_sets "id=0,streams=v" \
     -hls_playlist false -f dash $i.mpd;
 done
+
+
+
 # for i in "${files[@]}"
 # do
 #    exec ffmpeg -i $i \
