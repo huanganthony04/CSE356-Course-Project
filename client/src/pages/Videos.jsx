@@ -11,7 +11,7 @@ const Videos = () => {
 
     const fetchVideos = () => {
         //Get list of videos to display
-        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos', {count: 29}, { withCredentials: true })
+        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos', {count: 10}, { withCredentials: true })
             .then((response) => {
                 console.log(videos);
                 setVideos(videos.concat(response.data.videos));
