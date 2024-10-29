@@ -106,6 +106,7 @@ router.get('/api/verify', async (req, res) => {
 
 router.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
+    console.log( req.body );
     if (!username || !password) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing required fields' });
     }
