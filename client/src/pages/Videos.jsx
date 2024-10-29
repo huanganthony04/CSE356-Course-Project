@@ -26,10 +26,10 @@ const Videos = () => {
                 if (response.data.error) {
                     navigate('/login');
                 }
+                else {
+                    fetchVideos();
+                }
             })
-
-        fetchVideos();
-
     }, []);
 
     const videosList = videos.map((video, i) =>
