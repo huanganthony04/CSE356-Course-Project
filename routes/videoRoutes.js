@@ -21,8 +21,16 @@ router.get('/api/', isAuth, (req, res) => {
 });
 
 router.get('/api/manifest/:id', isAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'media', 'videos', `${req.params.id}_dir`, `${req.params.id}.mpd`));
+    res.sendFile(path.join(__dirname, '..', 'public', 'media', `${req.params.id}.mpd`));
 });
+
+router.get('/api/videoRequest/:id/:file', isAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'media', `${req.params.file}`));
+})
+
+router.get('/media/:file', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'media', `${req.params.file}`));
+})
 
 router.get('/api/thumbnail/:id', isAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'thumbnails', `${req.params.id}_thumbnail.jpg`));
