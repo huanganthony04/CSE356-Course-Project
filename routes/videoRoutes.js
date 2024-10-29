@@ -37,15 +37,17 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 });
 
 //Give count number of videos with metadata
+let videoCounter = 0;
 router.post('/api/videos', isAuth, (req, res) => {
     if(!req.body.count) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
     }
     let response = [];
     for(let i = 0; i < req.body.count; i++) {
-        let j = i % videoIDs.length;
+        let j = (i + videoCounter) % videoIDs.length;
         response.push({ title: videoIDs[j] , description: videoData[videoIDs[j]] });
     }
+    videoCounter += req.body.count;
     return res.status(200).json({ status: 'OK', videos: response });
 });
 
