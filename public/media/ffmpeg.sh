@@ -67,7 +67,7 @@ declare -a files=(  "2892038-uhd_3840_2160_30fps"
 # done
 
 #Bespoke encoding
-declare -a files=("7092080-hd_1920_1080_30fps")
+declare -a files=("1580117-uhd_3840_2160_30fps" "7170778-uhd_4096_2160_25fps")
 for i in "${files[@]}";
 do
 
