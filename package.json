@@ -26,6 +26,7 @@
     "express": "^4.21.0",
     "express-session": "^1.18.0",
     "fs": "^0.0.1-security",
+    "hashlib": "^1.0.1",
     "mongodb": "^6.9.0",
     "mongoose": "^8.7.0",
     "morgan": "^1.10.0",

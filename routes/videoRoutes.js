@@ -3,7 +3,7 @@ const path = require('path');
 const session = require("express-session");
 const router = express.Router();
 const fs = require('fs');
-
+const hashlib = require('hashlib');
 //Import video metadata
 const videoData = JSON.parse(fs.readFileSync('m1.json'));
 const videoIDs = Object.keys(videoData);
@@ -51,4 +51,19 @@ router.post('/api/videos', isAuth, (req, res) => {
     return res.status(200).json({ status: 'OK', videos: response });
 });
 
+router.post('api/upload', (req,res) => {
+    if(!req.body.author) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing author'});
+    }
+    if(!req.body.title) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing title'});
+    }
+    if(!req.body.mp4file) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing file'});
+    }
+
+});
+router.post('/api/processing-status', (req,res) => {
+    
+});
 module.exports = router;
