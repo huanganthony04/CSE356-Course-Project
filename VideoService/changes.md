@@ -13,3 +13,12 @@ Expects an HTML page where videos can be uploaded from
 Returns a list of uploaded videos for the logged in user.
 Response format: { videos: [{ id: string, title: string, status: string }] }
 where status can be "processing" or "complete", where “processing” indicates the file has been received, but not yet available for viewing.
+
+TODO:
+1. Create a new schema for videos
+2. Create a hashing system for videos
+    3. Create a script to insert the hash into the database
+    3. ADDENDUM: We need to hash BEFORE encoding
+4. Create a video uploading system (with ffmpeg)
+5. Create an upload page
+6. Create a processing status page
