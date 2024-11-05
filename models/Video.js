@@ -12,11 +12,7 @@ const metadataSchema = new Schema({
 });
 
 const VideosSchema = new Schema({
-    id: {
-        type: String,
-        unique: true,
-        required: true
-    },
+    _id: String,
     metadata: metadataSchema
 });
 
