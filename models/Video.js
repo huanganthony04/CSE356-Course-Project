@@ -8,7 +8,14 @@ const metadataSchema = new Schema({
     description: {
         type: String,
         required: true,
-    }
+    },
+    likedBy: [{
+        type: mongoose.Schema.Types.ObjectId, ref: 'Users'
+    }]
+}, { toJSON: { virtuals: true } }) ;
+
+metadataSchema.virtual('likes').get(function() {
+    return this.likedBy.length;
 });
 
 const VideosSchema = new Schema({

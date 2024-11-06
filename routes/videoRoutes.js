@@ -3,7 +3,14 @@ const path = require('path');
 const session = require("express-session");
 const router = express.Router();
 const fs = require('fs');
-const hashlib = require('hashlib');
+
+//Having issues installing hashlib, disabling for now
+//const hashlib = require('hashlib');
+
+//Import models
+const UserModel = require('../models/User');
+const VideoModel = require('../models/Video');
+
 //Import video metadata
 const videoData = JSON.parse(fs.readFileSync('m1.json'));
 const videoIDs = Object.keys(videoData);
@@ -35,6 +42,23 @@ router.get('/media/:file', (req, res) => {
 router.get('/api/thumbnail/:id', isAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'thumbnails', `${req.params.id}_thumbnail.jpg`));
 });
+
+router.post('/api/like', isAuth, async (req, res) => {
+    if (!req.body.id) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing id' });
+    }
+    let video = await VideoModel.findOne({ '_id': req.body.id }, 'title description');
+    if (!video) {
+        res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+    }
+    let user = await UserModel.findOne({ username: req.session.userId });
+    if (!user) {
+        res.json({ status: 'ERROR', error: true, message: 'User not found' });
+    }
+    console.log(video, user);
+
+});
+
 
 //Give count number of videos with metadata
 let videoCounter = 0;
