@@ -44,6 +44,8 @@ const Login = () => {
     }
 
     return (
+        //For the login form to work, add "onSubmit={handleSubmit}" to the form tag.
+        //Adding this may fail the test however (But Milestone 2 may succeed, frontend script changed from Milestone 1)
         <>
             <form action="/api/login" method="post" onSubmit={handleSubmit}>
                 <div>
