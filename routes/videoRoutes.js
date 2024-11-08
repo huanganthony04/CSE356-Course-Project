@@ -12,8 +12,9 @@ const UserModel = require('../models/User');
 const VideoModel = require('../models/Video');
 
 //Import video metadata
-const videoData = JSON.parse(fs.readFileSync('m1.json'));
-const videoIDs = Object.keys(videoData);
+// const videoData = JSON.parse(fs.readFileSync('m1.json'));
+// const videoIDs = Object.keys(videoData);
+// All metadata is now in the database
 
 const isAuth = (req, res, next) => {
     if (req.session.userId) {
@@ -61,17 +62,30 @@ router.post('/api/like', isAuth, async (req, res) => {
 
 
 //Give count number of videos with metadata
-let videoCounter = 0;
-router.post('/api/videos', isAuth, (req, res) => {
+// let videoCounter = 0;
+// router.post('/api/videos', isAuth, async (req, res) => {
+//     if(!req.body.count) {
+//         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
+//     }
+//     let response = [];
+//     for(let i = 0; i < req.body.count; i++) {
+//         let j = (i + videoCounter) % videoIDs.length;
+//         response.push({ id: videoIDs[j], title: videoIDs[j], description: videoData[videoIDs[j]] });
+//     }
+//     videoCounter += req.body.count;
+//     return res.status(200).json({ status: 'OK', videos: response });
+// });
+// Old route
+
+router.post('/api/videos', isAuth, async (req, res) => {
     if(!req.body.count) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
     }
     let response = [];
+    let query = VideoModel.find({},null,{limt:req.body.count}).exec();
     for(let i = 0; i < req.body.count; i++) {
-        let j = (i + videoCounter) % videoIDs.length;
-        response.push({ id: videoIDs[j], title: videoIDs[j], description: videoData[videoIDs[j]] });
+        response.push(query);
     }
-    videoCounter += req.body.count;
     return res.status(200).json({ status: 'OK', videos: response });
 });
 
