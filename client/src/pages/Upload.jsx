@@ -28,11 +28,28 @@ function upload(){
         if(!author){
             return
         }
-        axios.post(
-            'http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/upload', 
-            { author: author, title: title, mp4file : video },
-            { withCredentials: true }
-        )
+        
+        var reader = new FileReader();
+        reader.readAsDataURL(video);
+        reader.onload = function () {
+            console.log(reader.result);
+            console.log(title)
+            console.log(author)
+            axios.post(
+                'http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/upload', 
+                { author: author, title: title, mp4file : reader.result },
+                { withCredentials: true }
+            )
+        };
+        reader.onerror = function (error) {
+            console.log('Error: ', error);
+            return
+        };
+        // axios.post(
+        //     'http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/upload', 
+        //     { author: author, title: title, mp4file : video },
+        //     { withCredentials: true }
+        // )
     }
     return (
         <div id="mainContent" className='main-upload-content'>
@@ -45,7 +62,7 @@ function upload(){
                     <div id='fileButtonContainer' className='file-button-container' style={{order:1}}>
                         <div id='fileButton' className='file-button'>
                             <label>Choose Video
-                                <input type="file" accept="video/*" style={ {display: "none"}}/>
+                                <input type="file" accept="video/*" name="video-file" style={ {display: "none"}}/>
                             </label>
                         </div>
                     </div>
