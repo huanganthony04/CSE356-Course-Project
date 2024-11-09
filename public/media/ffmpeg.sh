@@ -1,4 +1,6 @@
 # #!/bin/bash
+
+# OBSOLTE: Only kept on for archival purposes
 declare -a files=(  "2892038-uhd_3840_2160_30fps"
   "6423982-uhd_2160_3840_29fps"
   "7170778-uhd_4096_2160_25fps"

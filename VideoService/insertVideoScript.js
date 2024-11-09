@@ -9,11 +9,13 @@ const {spawn,spawnSync, exec,execSync} = require("child_process")
 const VideoModel = require('../models/Video');
 
 const mongoURI = 'mongodb://localhost:27017/CSE356';
+//NOTE: Run this script in the root directory
 
 //Set up connection to mongo client
 mongoose.connect(mongoURI)
     .then(() => console.log('Connected to MongoDB'));
 
+let videocount = 0
 const populate = async () => {
 
     //Get all the mp4 files
@@ -22,10 +24,10 @@ const populate = async () => {
     //Generate UID
     //Render video
     
-    const media_path = "./public/media/";
-    const json_path = "./public/media/m1.json"
+    const video_path = "./public/media/videos";
+    const json_path = "./public/media/videos/m2.json"
     //1. Get all the mp4 files
-    let videoFileArray = fs.readdirSync(media_path,{withFileTypes: true})
+    let videoFileArray = fs.readdirSync(video_path,{withFileTypes: true})
         .filter(dirent => dirent.name.slice((dirent.name.lastIndexOf(".") - 1 >>> 0) + 2) == "mp4")
         .map(direct => direct);
 
@@ -50,19 +52,20 @@ const populate = async () => {
             _id: newuid,
             metadata: {
                 title: video.name,
-                description: metadata[video.name]
+                description: metadata[video.name],
+                author: "none"
             }
         });
         //Insert into database
         await newvideo.save().catch((err) => {
             console.log("Error saving user: " + err);
-            return res.status(200).json({ status: 'ERROR', error: true, message: `${err}` })
         });
 
-        const inputPath = video.parentPath + video.name
+        const inputPath = video.parentPath + '/' + video.name
         
-        let result = execSync(`sh testbash.sh ${inputPath} ${newuid}`)
-        console.log(result)
+        let result = execSync(`sh ./VideoService/render.sh ${inputPath} ${newuid}`)
+        videocount++
+        console.log("VIDEO" + videocount)
     }
 }
 
