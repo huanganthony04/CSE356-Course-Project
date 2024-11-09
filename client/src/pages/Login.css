@@ -9,7 +9,7 @@ form {
 label {
     display: block;
 }
-input {
+.username, .password{
     width: 180px;
     height: 25px;
 }
