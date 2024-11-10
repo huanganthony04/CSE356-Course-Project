@@ -72,6 +72,51 @@ router.post('/api/adduser', async (req, res) => {
     return res.status(200).json({ status: 'OK' });
 });
 
+//Force add a user to create test users for testing purposes
+router.post('/api/forceadduser', async (req, res) => {
+    const { username, password, email } = req.body;
+    if (!username || !password || !email) {
+        console.log("Missing required fields");
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing required fields' });
+    }
+
+    //Check if the username already exists
+    let existingUser = await UserModel.findOne({
+        $or: [
+            { username: username },
+            { email: email }
+        ]
+    });
+    if (existingUser) {
+        console.log("User already exists");
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'User already exists' });
+    }
+
+    //Create a random verification key
+    const key = Math.random().toString(36).substring(2, 15);
+
+    //Create the UserModel with verified already set to true
+    const hash = await bcrypt.hash(password, 10);
+    let user = new UserModel({
+        username: username,
+        password: hash,
+        email: email,
+        verified: true,
+        verificationKey: key
+    });
+
+    //Save the user
+    await user.save().catch((err) => {
+        console.log("Error saving user: " + err);
+        return res.status(200).json({ status: 'ERROR', error: true, message: `${err}` })
+    });
+
+    console.log("User created successfully");
+    return res.status(200).json({ status: 'OK' });
+});
+
+
+
 router.get('/api/verify', async (req, res) => {
     let { email, key } = req.query;
     email = decodeURIComponent(email);

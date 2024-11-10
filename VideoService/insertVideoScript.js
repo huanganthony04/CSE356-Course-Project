@@ -63,8 +63,13 @@ const populate = async () => {
 
         const inputPath = video.parentPath + '/' + video.name
         
+        
         let result = execSync(`sh ./VideoService/render.sh ${inputPath} ${newuid}`)
         videocount++
+        fs.appendFile('/root/cse356/Course-Project/uploads/oldvid.log', newuid + ',' + video.name + '\n', function (err) {
+            if (err) throw err;
+            console.log('Saved!');
+        });
         console.log("VIDEO" + videocount)
     }
 }

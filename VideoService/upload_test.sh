@@ -25,6 +25,6 @@ ffmpeg -i $1 \
     -b:v:6 3134k -c:v:6 libx264 -filter:v:6 "scale=1024:576:force_original_aspect_ratio=decrease,pad=1280:720:-1:-1:color=black"  \
     -b:v:7 4952k -c:v:7 libx264 -filter:v:7 "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:-1:-1:color=black"  \
     -use_timeline 1 -use_template 1 -window_size 5 -seg_duration 10 -media_seg_name "${2}_chunk_\$Bandwidth\$_\$Number\$.m4s" -init_seg_name "${2}_init-stream\$RepresentationID\$.\$ext\$" -adaptation_sets "id=0,streams=v" \
-    -hls_playlist false -f dash ./public/media/$2.mpd;
+    -hls_playlist false -f dash ./uploads/$2.mpd;
 
-ffmpeg -i $1 -vf "thumbnail,scale=320:180:force_original_aspect_ratio=decrease,pad=320:180:(ow-iw)/2:(oh-ih)/2:color=black" -vframes 1 ./public/thumbnails/$2.jpg
+ffmpeg -i $1 -vf "thumbnail,scale=320:180:force_original_aspect_ratio=decrease,pad=320:180:(ow-iw)/2:(oh-ih)/2:color=black" -vframes 1 ./uploads/$2.jpg

@@ -33,7 +33,7 @@ const Videos = () => {
     }, []);
 
     const videosList = videos.map((video, i) =>
-        <VideoListElement key={i} id={video.title} description={video.description}/>
+        <VideoListElement key={i} id={video.id} description={video.description}/>
     );
 
     return (
