@@ -35,8 +35,8 @@ const buildFeedbackArray = async () => {
 
 }
 
-//Generate a video queue for a given user
-const generateVideoStack = async (username) => {
+//Generate a video array for a given user
+const generateVideoArray = async (username) => {
     
     const data = await buildFeedbackArray();
     const recommender = new Recommender();
@@ -44,7 +44,7 @@ const generateVideoStack = async (username) => {
 
     let user = await UserModel.findOne({ username: username });
 
-    //Everything recommended by the recommender goes on top of the stack,
+    //Everything recommended by the recommender goes first,
     //Then unwatched videos,
     //Then finally watched videos.
 
@@ -53,7 +53,9 @@ const generateVideoStack = async (username) => {
     let watchedVids = await RatingModel.find({ user: user._id });
     watchedVids = watchedVids.map((vid) => vid.video);
 
+    let array = new Array();
     let set = new Set();
+
     for(let rec of recommendations) {
         set.add(rec.itemId);
     }
@@ -61,20 +63,16 @@ const generateVideoStack = async (username) => {
         set.add(watched);
     }
 
-    console.log(set);
-
     videos = videos.filter((video) => !set.has(video._id));
 
-    console.log(videos);
+    array = recommendations.map((rec) => rec.itemId);
+    array = array.concat(videos.map((video) => video._id));
+    array = array.concat(watchedVids);
 
-    let stack = watchedVids.concat(videos);
+    console.log(array);
 
-    while(recommendations.length > 0) {
-        stack.push({ _id: recommendations.pop().itemId });
-    }
-
-    return stack;
+    return array;
 
 }
 
-export default generateVideoStack;
+export default generateVideoArray;

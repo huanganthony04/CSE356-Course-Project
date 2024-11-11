@@ -1,10 +1,10 @@
 const loadModule = async () => {
-    const { default: generateVideoStack } = await import('./recommender.mjs');
-    return generateVideoStack;
+    const { default: generateVideoArray } = await import('./recommender.mjs');
+    return generateVideoArray;
 }
 
 module.exports = (...args) => {
-    return loadModule().then((generateVideoStack) => {
-        return generateVideoStack(...args);
+    return loadModule().then((generateVideoArray) => {
+        return generateVideoArray(...args);
     });
 }

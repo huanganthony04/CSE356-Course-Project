@@ -29,9 +29,10 @@ const upload = multer({ storage: storage })
 const UserModel = require('../models/User');
 const VideoModel = require('../models/Video');
 const RatingModel = require('../models/Rating');
+const RecommendationModel = require('../models/Recommendation');
 
 //Import recommender
-const generateVideoStack = require('../Recommender/recommender');
+const generateVideoArray = require('../Recommender/recommender');
 
 //Import video metadata
 // const videoData = JSON.parse(fs.readFileSync('m1.json'));
@@ -135,14 +136,8 @@ router.post('/api/view', isAuth, async (req, res) => {
     return res.status(200).json({ status: 'OK' });
 });
 
-//A stack to store videos (their _id fields), from most to least recommended
-//When /api/videos wants { count } videos, pop { count } from this stack.
-//If the stack is empty recall the recommender to generate a new stack.
-
-//This is horrendously concurrency-unsafe and bad. Fix later by moving user-specific stacks to their own database.
-let videoStack = [];
-let videoStackUser = "";
-
+//If { continue: true }, continue using the current recommendation list and return { count } videos (use for infinite scrolling)
+//Otherwise regenerate the recommendation list for the current user and return { count } videos
 router.post('/api/videos', isAuth, async (req, res) => {
     if(!req.body.count) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
@@ -153,24 +148,40 @@ router.post('/api/videos', isAuth, async (req, res) => {
         return res.json({ status: 'ERROR', error: true, message: 'User not found' });
     }
 
-    let response = [];
-
-    if (videoStack.length < req.body.count) {
-        let newStack = await generateVideoStack(req.session.userId);
-        videoStack = newStack.concat(videoStack);
+    //Create a recommendation array for the user if it doesn't exist, or regenerate if continue is false
+    let recommendation = await RecommendationModel.findOne({ user: user._id });
+    if (!recommendation) {
+        let videoArray = await generateVideoArray(user.username);
+        recommendation = new RecommendationModel({
+            user: user._id,
+            videoIds: videoArray,
+            index: 0
+        })
+    }
+    else if (!req.body.continue) {
+        let videoArray = await generateVideoArray(user.username);
+        recommendation.videoIds = videoArray;
+        recommendation.index = 0;
     }
 
+    let videos = recommendation.videoIds.slice(recommendation.index, recommendation.index + req.body.count);
+    recommendation.index += req.body.count;
+
+    await recommendation.save().catch((err) => {
+        return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving recommendation: ${err}` });
+    });
+
+    let response = [];
+
     for(let i = 0; i < req.body.count; i++) {
-        let video = await VideoModel.findOne({ _id: videoStack.pop()._id }, 'metadata');
-
+        let video = await VideoModel.findOne({ _id: videos[i] }, 'metadata');
         let totalRatings = await RatingModel.find({ video: video._id });
-
         let views = totalRatings.length;
         let likes = totalRatings.filter((rating) => rating.rating === true).length;
         let watched = totalRatings.filter((rating) => rating.user === user._id).length > 0;
-
         response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
     }
+
     return res.status(200).json({ status: 'OK', videos: response });
 });
 
