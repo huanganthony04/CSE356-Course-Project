@@ -26,6 +26,7 @@ const upload = multer({ storage: storage })
 //Import models
 const UserModel = require('../models/User');
 const VideoModel = require('../models/Video');
+const RatingModel = require('../models/Rating');
 
 //Import video metadata
 // const videoData = JSON.parse(fs.readFileSync('m1.json'));
@@ -65,56 +66,67 @@ router.post('/api/like', isAuth, async (req, res) => {
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
-    let video = await VideoModel.findOne({ '_id': req.body.id }, 'metadata');
-    if (!video) {
-        return res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+    if(req.body.like === undefined) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing like value' });
     }
+    if(req.body.like !== true && req.body.like !== false && req.body.like !== null) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid like value' });
+    }
+
     let user = await UserModel.findOne({ username: req.session.userId });
     if (!user) {
         return res.json({ status: 'ERROR', error: true, message: 'User not found' });
     }
-    //Check if the previous value matches the given value. If so, throw an error.
-    let likedBy = video.metadata.likedBy;
-    for(let i = 0; i < likedBy.length; i++) {
-        if(likedBy[i].userId === req.session.userId) {
-            if((req.body.like === 'true' && likedBy[i].likeType === true) || (req.body.like === 'false' && likedBy[i].likeType === false) || (req.body.like === 'null' && likedBy[i].likeType === null)) { 
-                return res.status(200).json({ status: 'ERROR', error: true, message: 'Already liked' });
-            }
-            else {
-                likedBy[i].likeType = req.body.like;
-                if (req.body.like === 'null') {
-                    likedBy[i].likeType = null;
-                }
-                await video.save().catch((err) => {
-                    return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
-                })
-                return res.status(200).json({ status: 'OK' });
-            }
-        }
+    let video = await VideoModel.findOne({ '_id': req.body.id }, 'metadata');
+    if (!video) {
+        return res.json({ status: 'ERROR', error: true, message: 'Video not found' });
     }
-    return res.status(200).json({ status: 'ERROR', error: true, message: 'View not found' });
+
+    //Check if the previous value matches the given value. If so, throw an error.
+    let rating = await RatingModel.findOne({ user: user._id, video: video._id });
+    if (!rating) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'View not found' });
+    }
+    if (rating.rating === req.body.like) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Rating is already given value' });
+    }
+    rating.rating = req.body.like;
+    await rating.save().catch((err) => {
+        return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+    });
+    return res.status(200).json({ status: 'OK' });
 });
 
 router.post('/api/view', isAuth, async (req, res) => {
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
+
+    let user = await UserModel.findOne({ username: req.session.userId });
+    if (!user) {
+        return res.json({ status: 'ERROR', error: true, message: 'User not found' });
+    }
     let video = await VideoModel.findOne({ '_id': req.body.id }, 'metadata');
     if (!video) {
         res.json({ status: 'ERROR', error: true, message: 'Video not found' });
     }
+
     //Check if the user has already viewed the video
-    let likedBy = video.metadata.likedBy;
-    for(let i = 0; i < likedBy.length; i++) {
-        if(likedBy[i].userId === req.session.userId) {
-            return res.status(200).json({ status: 'ERROR', error: true, message: 'Already viewed' });
-        }
+    let rating = await RatingModel.findOne({ user: user._id, video: video._id });
+    if (rating) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Already viewed' });
     }
+
     //Add view to the video
-    likedBy.push({ userId: req.session.userId, likeType: null });
-    await video.save().catch((err) => {
-        return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
-    })
+    const newRating = new RatingModel({
+        user: user._id,
+        video: video._id,
+        rating: null
+    });
+    await newRating.save().catch((err) => {
+        return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving view: ${err}` });
+    });
+
     return res.status(200).json({ status: 'OK' });
 });
 
