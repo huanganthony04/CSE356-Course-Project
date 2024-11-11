@@ -6,10 +6,6 @@ const fs = require('fs');
 const crypto = require("crypto");
 const {spawn,spawnSync, exec,execSync} = require("child_process")
 
-//Gorse SDK
-const { Gorse } = require("gorsejs")
-const GorseClient = new Gorse({ endpoint: "http://127.0.0.1:8088" })
-
 const multer  = require('multer');
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -64,11 +60,12 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'thumbnails', `${req.params.id}.jpg`));
 });
 
+//Body should contain {"id":"videoID", "like":"true/false/null"}
 router.post('/api/like', isAuth, async (req, res) => {
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
-    let video = await VideoModel.findOne({ '_id': req.body.id }, 'title description');
+    let video = await VideoModel.findOne({ '_id': req.body.id }, 'metadata');
     if (!video) {
         return res.json({ status: 'ERROR', error: true, message: 'Video not found' });
     }
@@ -76,36 +73,50 @@ router.post('/api/like', isAuth, async (req, res) => {
     if (!user) {
         return res.json({ status: 'ERROR', error: true, message: 'User not found' });
     }
-    console.log(video, user, " found");
-    await GorseClient.insertFeedbacks([{ FeedbackType: "like", UserId: req.session.userId, ItemId: req.body.id }]);
-    return res.status(200).json({ status: 'OK' });
+    //Check if the previous value matches the given value. If so, throw an error.
+    let likedBy = video.metadata.likedBy;
+    for(let i = 0; i < likedBy.length; i++) {
+        if(likedBy[i].userId === req.session.userId) {
+            if((req.body.like === 'true' && likedBy[i].likeType === true) || (req.body.like === 'false' && likedBy[i].likeType === false) || (req.body.like === 'null' && likedBy[i].likeType === null)) { 
+                return res.status(200).json({ status: 'ERROR', error: true, message: 'Already liked' });
+            }
+            else {
+                likedBy[i].likeType = req.body.like;
+                if (req.body.like === 'null') {
+                    likedBy[i].likeType = null;
+                }
+                await video.save().catch((err) => {
+                    return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+                })
+                return res.status(200).json({ status: 'OK' });
+            }
+        }
+    }
+    return res.status(200).json({ status: 'ERROR', error: true, message: 'View not found' });
 });
 
 router.post('/api/view', isAuth, async (req, res) => {
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
-    let video = await VideoModel.findOne({ '_id': req.body.id }, 'title description');
+    let video = await VideoModel.findOne({ '_id': req.body.id }, 'metadata');
     if (!video) {
         res.json({ status: 'ERROR', error: true, message: 'Video not found' });
     }
+    //Check if the user has already viewed the video
+    let likedBy = video.metadata.likedBy;
+    for(let i = 0; i < likedBy.length; i++) {
+        if(likedBy[i].userId === req.session.userId) {
+            return res.status(200).json({ status: 'ERROR', error: true, message: 'Already viewed' });
+        }
+    }
     //Add view to the video
-    video.metadata.likedBy.push({ user: req.session.userId, likeType: null });
+    likedBy.push({ userId: req.session.userId, likeType: null });
     await video.save().catch((err) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
     })
-    //Tell Gorse the user has viewed this and not liked it
-    await GorseClient.insertFeedbacks([{ FeedbackType: "read", UserId: req.session.userId, ItemId: req.body.id }]);
-
-})
-
-//Import all items and users into the gorse database
-router.post('/api/import', isAuth, async (req, res) => {
-    let videos = await VideoModel.find({})
-    res.status(200).send(videos);
-})
-
-
+    return res.status(200).json({ status: 'OK' });
+});
 
 //Give count number of videos with metadata
 // let videoCounter = 0;
@@ -185,9 +196,12 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
     });
 
     //Upload works
+    //Will reimplement with a threadpool and moved off to another machine
     execSync(`sh ./VideoService/upload.sh ${req.file.path} ${newuid}`, {
        cwd: '/root/cse356/Course-Project'
     })
+
+    VideoMode.findOneAndUpdate({_id: newuid},{status: 'completed'})
 
     fs.appendFile('/root/cse356/Course-Project/uploads/newvids.log', newuid + '\n', function (err) {
         if (err) throw err;

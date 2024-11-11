@@ -16,8 +16,8 @@ const metadataSchema = new Schema({
     },
     //likedBy also tracks who watched the video.
     likedBy: [{
-        user: {
-            type: mongoose.Schema.Types.ObjectId, ref: 'Users',
+        userId: {
+            type: String,
             required: true
         },
         likeType: {
