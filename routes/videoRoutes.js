@@ -66,15 +66,15 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 
 router.post('/api/like', isAuth, async (req, res) => {
     if (!req.body.id) {
-        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing id' });
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
     let video = await VideoModel.findOne({ '_id': req.body.id }, 'title description');
     if (!video) {
-        res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+        return res.json({ status: 'ERROR', error: true, message: 'Video not found' });
     }
     let user = await UserModel.findOne({ username: req.session.userId });
     if (!user) {
-        res.json({ status: 'ERROR', error: true, message: 'User not found' });
+        return res.json({ status: 'ERROR', error: true, message: 'User not found' });
     }
     console.log(video, user, " found");
     await GorseClient.insertFeedbacks([{ FeedbackType: "like", UserId: req.session.userId, ItemId: req.body.id }]);
@@ -82,7 +82,27 @@ router.post('/api/like', isAuth, async (req, res) => {
 });
 
 router.post('/api/view', isAuth, async (req, res) => {
-    //TODO
+    if (!req.body.id) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
+    }
+    let video = await VideoModel.findOne({ '_id': req.body.id }, 'title description');
+    if (!video) {
+        res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+    }
+    //Add view to the video
+    video.metadata.likedBy.push({ user: req.session.userId, likeType: null });
+    await video.save().catch((err) => {
+        return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+    })
+    //Tell Gorse the user has viewed this and not liked it
+    await GorseClient.insertFeedbacks([{ FeedbackType: "read", UserId: req.session.userId, ItemId: req.body.id }]);
+
+})
+
+//Import all items and users into the gorse database
+router.post('/api/import', isAuth, async (req, res) => {
+    let videos = await VideoModel.find({})
+    res.status(200).send(videos);
 })
 
 
@@ -108,10 +128,13 @@ router.post('/api/videos', isAuth, async (req, res) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
     }
     let response = [];
-    let query = await VideoModel.find({},null,{limit:req.body.count}).lean().exec();
+    //let query = await VideoModel.find({},null,{limit:req.body.count}).lean().exec();
+    let query = await VideoModel.aggregate([{ $sample : { size : req.body.count}}])
     console.log(query);
     for(let i = 0; i < req.body.count; i++) {
-        response.push({id: query[i]._id, title: query[i].metadata.title, description: query[i].metadata.description });
+        let likedBy = query[i].metadata.likedBy;
+        let watched = likedBy.includes(req.session.userId);
+        response.push({id: query[i]._id, description: query[i].metadata.description, title: query[i].metadata.title,  watched: watched, likes: query[i].metadata.likes, views: query[i].metadata.views });
     }
     return res.status(200).json({ status: 'OK', videos: response });
 });
@@ -179,8 +202,16 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
 
     res.status(200).json({id: newuid})
 });
-router.post('/api/processing-status', (req,res) => {
+router.post('/api/processing-status', isAuth, async (req,res) => {
     let currentUser = req.session.userId
+    //currentUser = 'testuser1' For test user
+    let allUserVideos =  await VideoModel.find({'metadata.author' : currentUser}).lean().exec()
+    console.log(allUserVideos)
+    let response = []
+    allUserVideos.forEach((video) => {
+        response.push({id: video._id, title: video.metadata.title, status: video.status})
+    })
+    res.status(200).json({videos: response})
 });
 
 module.exports = router;

@@ -53,8 +53,10 @@ const populate = async () => {
             metadata: {
                 title: video.name,
                 description: metadata[video.name],
-                author: "none"
-            }
+                author: "grading_script_above",
+                
+            },
+            status : 'complete'
         });
         //Insert into database
         await newvideo.save().catch((err) => {
@@ -64,7 +66,7 @@ const populate = async () => {
         const inputPath = video.parentPath + '/' + video.name
         
         
-        let result = execSync(`sh ./VideoService/render.sh ${inputPath} ${newuid}`)
+        let result = execSync(`sh ./VideoService/upload.sh ${inputPath} ${newuid}`)
         videocount++
         fs.appendFile('/root/cse356/Course-Project/uploads/oldvid.log', newuid + ',' + video.name + '\n', function (err) {
             if (err) throw err;
