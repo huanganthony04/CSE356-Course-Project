@@ -31,12 +31,50 @@ const buildFeedbackArray = async () => {
             rating: score
         });
     }
-    console.log(feedback);
     return feedback;
+
 }
 
-const recommender = new Recommender();
-let data = await buildFeedbackArray();
-recommender.fit(data);
+//Generate a video queue for a given user
+const generateVideoStack = async (username) => {
+    
+    const data = await buildFeedbackArray();
+    const recommender = new Recommender();
+    recommender.fit(data);
 
-console.log(recommender.userRecs('testuser2'));
+    let user = await UserModel.findOne({ username: username });
+
+    //Everything recommended by the recommender goes on top of the stack,
+    //Then unwatched videos,
+    //Then finally watched videos.
+
+    let videos = await VideoModel.find({}, '_id');
+    let recommendations = recommender.userRecs(username);
+    let watchedVids = await RatingModel.find({ user: user._id });
+    watchedVids = watchedVids.map((vid) => vid.video);
+
+    let set = new Set();
+    for(let rec of recommendations) {
+        set.add(rec.itemId);
+    }
+    for(let watched of watchedVids) {
+        set.add(watched);
+    }
+
+    console.log(set);
+
+    videos = videos.filter((video) => !set.has(video._id));
+
+    console.log(videos);
+
+    let stack = watchedVids.concat(videos);
+
+    while(recommendations.length > 0) {
+        stack.push({ _id: recommendations.pop().itemId });
+    }
+
+    return stack;
+
+}
+
+export default generateVideoStack;
