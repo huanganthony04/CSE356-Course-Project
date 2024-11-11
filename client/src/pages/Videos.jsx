@@ -18,6 +18,16 @@ const Videos = () => {
             });
     }
 
+    const fetchMoreVideos = () => {
+        //Continue with the list of videos to display
+        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos', {count: 10, continue: true}, { withCredentials: true })
+            .then((response) => {
+                console.log(videos);
+                setVideos(videos.concat(response.data.videos));
+            });
+
+    }
+
     useEffect(() => {
 
         //Get authorization. If the user is not logged in, redirect to login page.
@@ -37,7 +47,7 @@ const Videos = () => {
     );
 
     return (
-        <InfiniteScroll dataLength={videos.length} next={fetchVideos} hasMore={true} loader={<h4>Loading...</h4>}>
+        <InfiniteScroll dataLength={videos.length} next={fetchMoreVideos} hasMore={true} loader={<h4>Loading...</h4>}>
             {videosList}
         </InfiniteScroll>
     )

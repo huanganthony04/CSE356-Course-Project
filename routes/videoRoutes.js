@@ -103,6 +103,7 @@ router.post('/api/like', isAuth, async (req, res) => {
     return res.status(200).json({ status: 'OK' });
 });
 
+//Should call when video is first viewed by the user
 router.post('/api/view', isAuth, async (req, res) => {
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
