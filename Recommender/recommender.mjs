@@ -39,8 +39,12 @@ const buildFeedbackArray = async () => {
 const generateVideoArray = async (username) => {
     
     const data = await buildFeedbackArray();
-    const recommender = new Recommender();
-    recommender.fit(data);
+    let recommendations = [];
+    if (data.length > 0) {
+        const recommender = new Recommender();
+        recommender.fit(data);
+        recommendations = recommender.userRecs(username);
+    }
 
     let user = await UserModel.findOne({ username: username });
 
@@ -48,8 +52,7 @@ const generateVideoArray = async (username) => {
     //Then unwatched videos,
     //Then finally watched videos.
 
-    let videos = await VideoModel.find({}, '_id');
-    let recommendations = recommender.userRecs(username);
+    let videos = await VideoModel.find({status: "complete"}, '_id');
     let watchedVids = user.watchHistory;
 
     let array = new Array();
@@ -70,24 +73,17 @@ const generateVideoArray = async (username) => {
         }
     });
 
-    console.log('Recs: ' + recommendations);
-
     for(let rec of recommendations) {
         set.add(rec.itemId);
     }
 
     videos = videos.filter((video) => !set.has(video._id));
 
-
     array = recommendations.map((rec) => rec.itemId);
-
-
     array = array.concat(videos.map((video) => video._id));
     array = array.concat(watchedVids);
 
-
     return array;
-
 }
 
 export default generateVideoArray;

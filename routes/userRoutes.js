@@ -120,7 +120,7 @@ router.post('/api/forceadduser', async (req, res) => {
 router.get('/api/verify', async (req, res) => {
     let { email, key } = req.query;
     email = decodeURIComponent(email);
-    console.log('Verifying' + email, key);
+    console.log('Verifying ' + email, key);
     if (!email || !key) {
         console.log("Missing required fields");
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing required fields' });
@@ -155,19 +155,22 @@ router.post('/api/login', async (req, res) => {
     if (!username || !password) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing required fields' });
     }
-    const user = await UserModel.findOne({ username });
+    const user = await UserModel.findOne({ username: username });
     if (!user) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'User does not exist' });
     }
     if (!user.verified) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'User is not verified' });
     }
-    
+
+    console.log('test');
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log('bcrypt works!');
     if (!isMatch) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid credentials' });
     }
     req.session.userId = username;
+    console.log('session set!');
     return res.status(200).json({ status: 'OK' });
 });
 

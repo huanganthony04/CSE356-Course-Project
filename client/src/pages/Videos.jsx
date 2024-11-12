@@ -7,18 +7,21 @@ import InfiniteScroll from 'react-infinite-scroll-component'
 const Videos = () => {
 
     const navigate = useNavigate();
+    const [firstVideos, setFirstVideos] = useState([]);
     const [videos, setVideos] = useState([]);
 
     const fetchVideos = () => {
+        console.log("fetching videos");
         //Get list of videos to display
         axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos', {count: 10}, { withCredentials: true })
             .then((response) => {
-                console.log(videos);
-                setVideos(videos.concat(response.data.videos));
+                console.log(response.data);
+                setFirstVideos(firstVideos.concat(response.data.videos));
             });
     }
 
     const fetchMoreVideos = () => {
+        console.log("fetching more videos");
         //Continue with the list of videos to display
         axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos', {count: 10, continue: true}, { withCredentials: true })
             .then((response) => {
@@ -42,14 +45,21 @@ const Videos = () => {
             })
     }, []);
 
+    const firstVideosList = firstVideos.map((video, i) =>
+        <VideoListElement key={i} id={video.id} description={video.description}/>
+    );
+
     const videosList = videos.map((video, i) =>
         <VideoListElement key={i} id={video.id} description={video.description}/>
     );
 
     return (
-        <InfiniteScroll dataLength={videos.length} next={fetchMoreVideos} hasMore={true} loader={<h4>Loading...</h4>}>
-            {videosList}
-        </InfiniteScroll>
+        <>
+            {firstVideosList}
+            <InfiniteScroll dataLength={videos.length} next={fetchMoreVideos} hasMore={true} loader={<h4>Loading...</h4>}>
+                {videosList}
+            </InfiniteScroll>
+        </>
     )
 }
 

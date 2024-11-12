@@ -21,10 +21,10 @@ const mongoURI = 'mongodb://127.0.0.1:27017/CSE356';
 mongoose.connect(mongoURI)
     .then(() => console.log('Connected to MongoDB'));
 
-// const store = new MongoDBSession({
-//     uri: mongoURI,
-//     collection: 'sessions'
-// });
+const store = new MongoDBSession({
+    uri: mongoURI,
+    collection: 'sessions'
+});
 
 app.use(morgan('combined'));
 
@@ -37,12 +37,12 @@ app.use(
 );
 
 
-// app.use(session({
-//     secret: process.env.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false,
-//     store: store
-// }));
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: store
+}));
 
 app.use(express.json());
 app.use((req, res, next) => {

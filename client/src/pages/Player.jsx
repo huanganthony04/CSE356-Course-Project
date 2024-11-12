@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect,useState,useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import * as dashjs from 'dashjs'
 import axios from 'axios'
 import PropTypes from 'prop-types'; 
@@ -37,6 +37,7 @@ import playButton from "./img/play-circle.svg"
 // - Then use the history API to change the URL https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method (Player)
 
 const Player = () => {
+    const navigate = useNavigate();
     const { videoId } = useParams()
     const [allVideos,setAllVideos] = useState([videoId]);
     const [ user, setUser ] = useState('');
@@ -44,11 +45,18 @@ const Player = () => {
     const [cursor,setCursor] = useState(0);
 
     let fetchData = () =>{
-        axios.post("http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 3}).then(
+        axios.post("http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 6}).then(
             (response)=>{
                 let buffer = []
                 response.data.videos.forEach((value) =>{
-                    buffer.push(value.id)
+                    if (videoId !== value.id) {
+                        console.log(videoId);
+                        console.log(value.id);
+                        buffer.push(value.id)
+                    }
+                    else {
+                        console.log("Skipping video");
+                    }
                 })
 
                 setAllVideos(
@@ -63,7 +71,7 @@ const Player = () => {
     }
 
     let fetchMoreData = () =>{
-        axios.post("http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 3, continue: true}).then(
+        axios.post("http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 6, continue: true}).then(
             (response)=>{
                 let buffer = []
                 response.data.videos.forEach((value) =>{
@@ -85,7 +93,7 @@ const Player = () => {
         //Get authorization. If the user is not logged in, redirect to login page.
         axios.get('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/isloggedin', { withCredentials: true })
             .then((response) => {
-                if (response.data.error) {
+                if (response.data.error || response.data.userId === undefined) {
                     navigate('/login');
                 }
                 else {
@@ -109,7 +117,6 @@ const Player = () => {
 
     return (
         <>
-            <h1>{`Logged in as ${user}`}</h1>
             <div className='infinite-scroll-container'>
             <InfiniteScroll
                 dataLength={allVideos.length}
@@ -138,7 +145,7 @@ function PlayerContainer({videoID}){
     const refToVideo = useRef();
     const refToTop = useRef();
     const refToBottom = useRef();
-
+    const refToContainer = useRef();
     useEffect(() =>{
         console.log(videoID);
         //Get video from the videoID
@@ -174,7 +181,7 @@ function PlayerContainer({videoID}){
         let internalPlayer = dashjs.MediaPlayer().create()
         
         videoElement = refToVideo.current;
-        internalPlayer.initialize(videoElement, manifest, true);
+        internalPlayer.initialize(videoElement, manifest, false);
         
         internalPlayer.updateSettings({
             'streaming': {
@@ -194,19 +201,22 @@ function PlayerContainer({videoID}){
         let options = {
           root: null,
           rootMargin: "0px",
-          threshold: 1.0,
+          threshold: 0.01,
         };
       
         let handleIntersect = (entries,observer) =>{
+            let currentId = window.location.href.split("/").pop();
             entries.forEach((entry)=>{
-                if(entry.isIntersecting){
+                if(entry.isIntersecting && currentId != videoID){
+                    refToVideo.current.scrollIntoView({ behavior: "smooth", block: "center" })
                     history.pushState(null,"",videoID)
                 }
             })
         }
         observer = new IntersectionObserver(handleIntersect, options);
-        observer.observe(refToTop.current);
-        observer.observe(refToBottom.current);
+        observer.observe(refToContainer.current);
+        //observer.observe(refToTop.current);
+        //observer.observe(refToBottom.current);
 
 
     },[videoID])
@@ -257,10 +267,9 @@ function PlayerContainer({videoID}){
     }
     return (
         <div id="mainContent" className="main-content">
-            <div id="topAnchor" className="top-anchor" ref={refToTop}>
-            </div>
+
             <div>Play {videoID}</div>
-            <div id="videoPlayerContainer">
+            <div ref={refToContainer}id="videoPlayerContainer">
                 <video ref={refToVideo} id="videoPlayer"></video>
                 <div id="videoControls" className='video-controls'>
                     <div id="playPauseBtn" className="play-pause-button" onClick={pausePlayButton}>
@@ -277,11 +286,9 @@ function PlayerContainer({videoID}){
                     </div>
                 </div>
                 <div id='ratingButtonContainer' className='like-button-container'>
-                    <button onClick={() => sendLikeRequest()}>Like</button>
-                    <button onClick={() => sendDislikeRequest()}>Dislike</button>
+                    <button name="like" onClick={() => sendLikeRequest()}>Like</button>
+                    <button name="dislike" onClick={() => sendDislikeRequest()}>Dislike</button>
                 </div>
-            </div>
-            <div id="bottomAnchor" className="bottom-anchor" ref={refToBottom}>
             </div>
         </div>
     )

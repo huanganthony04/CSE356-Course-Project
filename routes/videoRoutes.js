@@ -183,9 +183,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
     let videos = recommendation.videoIds.slice(recommendation.index, recommendation.index + req.body.count);
     recommendation.index += req.body.count;
 
-    await recommendation.save().catch((err) => {
-        return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving recommendation: ${err}` });
-    });
+    recommendation.save();
 
     let response = [];
 
@@ -197,6 +195,9 @@ router.post('/api/videos', isAuth, async (req, res) => {
         let watched = user.watchHistory.includes(video._id);
         response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
     }
+
+    console.log('videos sent: ');
+    console.log(response);
 
     return res.status(200).json({ status: 'OK', videos: response });
 });
@@ -237,7 +238,7 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
     let insert_result = newvideo.save().catch((err) => {
         console.log("Error saving user: " + err);
     });
-    videoQueue.add('videoQueue', { mp4File : req.file.buffer, uid : newuid})
+    //videoQueue.add('videoQueue', { mp4File : req.file.buffer, uid : newuid})
     //const videoWorker = new Worker("./videoWorker.js", {workerData : { mp4File : req.file.buffer, uid : newuid}});
     // //Generate the new video record
     // let newvideo = new VideoModel({

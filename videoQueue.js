@@ -10,7 +10,6 @@ const VideoModel = require('./models/Video');
 
 
 const connection = new IORedis({
-    password: '66cfe2a89ba30e1a6c706822',
     maxRetriesPerRequest: null,
 });
 
@@ -25,7 +24,7 @@ const worker = new Worker('videoQueue', async job => {
         let pathToTempFile = path.join(__dirname,'tmp',tempFileName)
         let videofile = fs.writeFileSync(pathToTempFile, mp4File)
     
-        exec(`sh ./VideoService/upload_test.sh ${pathToTempFile} ${newuid}`, {
+        exec(`sh ./VideoService/upload.sh ${pathToTempFile} ${newuid}`, {
             cwd: '/root/cse356/Course-Project'
              },
              async (error, stdout, stderr) =>{
@@ -47,6 +46,10 @@ const worker = new Worker('videoQueue', async job => {
     }catch(err){
         console.log(err)
     }
-  }, {connection});
-
+  }, {connection,
+        limiter: {
+            max: 1,
+            duration: 1*1000*60*8
+        }
+  });
 module.exports = videoQueue;
