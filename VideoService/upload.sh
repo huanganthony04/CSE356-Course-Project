@@ -15,7 +15,7 @@
 
 ffmpeg -i $1 \
     -map 0:v:0 -map 0:v:0 -map 0:v:0 -map 0:v:0 -map 0:v:0 -map 0:v:0 -map 0:v:0 -map 0:v:0 \
-    -threads 4 \
+    -threads 1 \
     -b:v:0 254k  -c:v:0 libx264 -filter:v:0 "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:-1:-1:color=black, scale=320:180"  \
     -b:v:1 507k -c:v:1 libx264 -filter:v:1 "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:-1:-1:color=black, scale=320:180"  \
     -b:v:2 759k -c:v:2 libx264 -filter:v:2 "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:-1:-1:color=black, scale=480:270" \

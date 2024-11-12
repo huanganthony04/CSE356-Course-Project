@@ -6,20 +6,22 @@ const fs = require('fs');
 const crypto = require("crypto");
 const {spawn,spawnSync, exec,execSync} = require("child_process")
 
+const {Worker,parentPort, MessageChannel } = require('worker_threads');
 
-
-const multer  = require('multer');
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, './../tmp/'))
-    },
-    filename: function (req, file, cb) {
-        //Generate the UID, and test if there is a duplicate
-        let tempid = crypto.randomBytes(8).toString("hex");
+// const multer  = require('multer');
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, path.join(__dirname, './../tmp/'))
+//     },
+//     filename: function (req, file, cb) {
+//         //Generate the UID, and test if there is a duplicate
+//         let tempid = crypto.randomBytes(8).toString("hex");
         
-        cb(null, 'processing-' + tempid + '.mp4')
-    }
-  })
+//         cb(null, 'processing-' + tempid + '.mp4')
+//     }
+//   })
+const multer = require('multer')
+const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
 //Having issues installing hashlib, disabling for now
@@ -67,15 +69,19 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'thumbnails', `${req.params.id}.jpg`));
 });
 
-//Body should contain {"id":"videoID", "like":"true/false/null"}
+//Body should contain {"id":"videoID", "value":"true/false/null"}
 router.post('/api/like', isAuth, async (req, res) => {
+
+    console.log("Like: " + req.body.value);
+    console.log(typeof req.body.value);
+    
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
-    if(req.body.like === undefined) {
+    if(req.body.value === undefined) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing like value' });
     }
-    if(req.body.like !== true && req.body.like !== false && req.body.like !== null) {
+    if(req.body.value !== true && req.body.value !== false && req.body.value !== null) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid like value' });
     }
 
@@ -93,13 +99,14 @@ router.post('/api/like', isAuth, async (req, res) => {
     if (!rating) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'View not found' });
     }
-    if (rating.rating === req.body.like) {
+    if (req.body.value !== null && rating.rating === req.body.value) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Rating is already given value' });
     }
-    rating.rating = req.body.like;
+    rating.rating = req.body.value;
     await rating.save().catch((err) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
     });
+    console.log("Made it to the end!")
     return res.status(200).json({ status: 'OK' });
 });
 
@@ -188,23 +195,13 @@ router.post('/api/videos', isAuth, async (req, res) => {
 
 router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
 
-    console.log('Current directory:', __dirname); 
-
     if(!req.file) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing file'});
     }
     if(!req.body.author) {
-        fs.unlink(req.file.path, (err) => {
-            if (err) throw err;
-            console.log('The file was deleted');
-          }); 
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing author'});
     }
     if(!req.body.title) {
-        fs.unlink(req.file.path, (err) => {
-            if (err) throw err;
-            console.log('The file was deleted');
-          }); 
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing title'});
     }
     
@@ -217,6 +214,7 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
             break;
         }
     }
+
     //Generate the new video record
     let newvideo = new VideoModel({
         _id: newuid,
@@ -226,33 +224,53 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
             author: req.body.author
         }
     });
+
     //Insert into database
-    await newvideo.save().catch((err) => {
+    let insert_result = newvideo.save().catch((err) => {
         console.log("Error saving user: " + err);
     });
+    
+    const videoWorker = new Worker("./videoWorker.js", {workerData : { mp4File : req.file.buffer, uid : newuid}});
+    // //Generate the new video record
+    // let newvideo = new VideoModel({
+    //     _id: newuid,
+    //     metadata: {
+    //         title: req.body.title,
+    //         description: "none",
+    //         author: req.body.author
+    //     }
+    // });
+    // //Insert into database
+    // let insert_result = newvideo.save().catch((err) => {
+    //     console.log("Error saving user: " + err);
+    // });
 
-    //Upload works
-    //Will reimplement with a threadpool and moved off to another machine
-    execSync(`sh ./VideoService/upload.sh ${req.file.path} ${newuid}`, {
-       cwd: '/root/cse356/Course-Project'
-    })
+    // //Upload works
+    // //Will reimplement with a threadpool and moved off to another machine
+    // exec(`sh ./VideoService/upload.sh ${req.file.path} ${newuid}`, {
+    //    cwd: '/root/cse356/Course-Project'
+    // },
+    //     async (error, stdout, stderr) =>{
+    //         insert_result.then(() =>{
+    //             VideoModel.findOneAndUpdate({_id: newuid},{status: 'completed'})
+    //         })
+            
 
-    VideoMode.findOneAndUpdate({_id: newuid},{status: 'completed'})
+    //         fs.appendFile('/root/cse356/Course-Project/uploads/newvids.log', newuid + '\n', function (err) {
+    //             if (err) throw err;
+    //             console.log('Saved!');
+    //         });
 
-    fs.appendFile('/root/cse356/Course-Project/uploads/newvids.log', newuid + '\n', function (err) {
-        if (err) throw err;
-        console.log('Saved!');
-    });
+    //         //Delete the temp mp4 file
+    //         fs.unlink(req.file.path, (err) => {
+    //             if (err) throw err;
+    //             console.log('The file was deleted');
+    //         }); 
+    // })
 
-    //Delete the temp mp4 file
-    fs.unlink(req.file.path, (err) => {
-        if (err) throw err;
-        console.log('The file was deleted');
-      }); 
-
-    res.status(200).json({id: newuid})
+    res.status(200).json({status: 'OK', id: newuid})
 });
-router.post('/api/processing-status', isAuth, async (req,res) => {
+router.get('/api/processing-status', isAuth, async (req,res) => {
     let currentUser = req.session.userId
     //currentUser = 'testuser1' For test user
     let allUserVideos =  await VideoModel.find({'metadata.author' : currentUser}).lean().exec()
@@ -261,7 +279,7 @@ router.post('/api/processing-status', isAuth, async (req,res) => {
     allUserVideos.forEach((video) => {
         response.push({id: video._id, title: video.metadata.title, status: video.status})
     })
-    res.status(200).json({videos: response})
+    res.status(200).json({status: 'OK', videos: response})
 });
 
 module.exports = router;

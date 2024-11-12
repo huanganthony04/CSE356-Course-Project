@@ -128,6 +128,7 @@ function PlayerContainer({videoID}){
         // });
         // setmpegdashPlayer(internalPlayer);
         //Real code used to make the request
+        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/view', {id : videoID})
         manifest = `http://anthonysgroup.cse356.compas.cs.stonybrook.edu/media/${videoID}.mpd`
         let videoElement;
         let internalPlayer = dashjs.MediaPlayer().create()
@@ -208,6 +209,12 @@ function PlayerContainer({videoID}){
 
     }
 
+    async function sendLikeRequest(event){
+        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/view', {id: videoID, value : "true"})
+    }
+    async function sendDislikeRequest(event){
+        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/view', {id: videoID, value : "false"})
+    }
     return (
         <div id="mainContent" className="main-content">
             <div id="topAnchor" className="top-anchor" ref={refToTop}>
@@ -228,6 +235,10 @@ function PlayerContainer({videoID}){
 
                         </ul>
                     </div>
+                </div>
+                <div id='ratingButtonContainer' className='like-button-container'>
+                    <button onClick={sendLikeRequest}>Like</button>
+                    <button onClick={sendDislikeRequest}>Dislike</button>
                 </div>
             </div>
             <div id="bottomAnchor" className="bottom-anchor" ref={refToBottom}>

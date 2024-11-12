@@ -84,6 +84,9 @@ video {
     }
 }
 
+.like-button-container{
+    display:flex
+}
 .infinite-scroll-container{
     height: 100%;
     width: 100%;
