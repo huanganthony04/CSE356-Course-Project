@@ -16,6 +16,9 @@ const UsersSchema = new Schema({
         unique: true,
         required: true
     },
+    watchHistory: [{
+        type: String
+    }],
     verified: Boolean,
     verificationKey: {
         type: String

@@ -50,26 +50,41 @@ const generateVideoArray = async (username) => {
 
     let videos = await VideoModel.find({}, '_id');
     let recommendations = recommender.userRecs(username);
-    let watchedVids = await RatingModel.find({ user: user._id });
-    watchedVids = watchedVids.map((vid) => vid.video);
+    let watchedVids = user.watchHistory;
 
     let array = new Array();
     let set = new Set();
 
-    for(let rec of recommendations) {
-        set.add(rec.itemId);
-    }
     for(let watched of watchedVids) {
         set.add(watched);
     }
 
+    //If recommendations contain watched videos, remove them and add them to front of watchedVids
+    recommendations = recommendations.filter((rec) => {
+        if (set.has(rec.itemId)) {
+            watchedVids.unshift(rec.itemId);
+            return false;
+        }
+        else {
+            return true;
+        }
+    });
+
+    console.log('Recs: ' + recommendations);
+
+    for(let rec of recommendations) {
+        set.add(rec.itemId);
+    }
+
     videos = videos.filter((video) => !set.has(video._id));
 
+
     array = recommendations.map((rec) => rec.itemId);
+
+
     array = array.concat(videos.map((video) => video._id));
     array = array.concat(watchedVids);
 
-    console.log(array);
 
     return array;
 

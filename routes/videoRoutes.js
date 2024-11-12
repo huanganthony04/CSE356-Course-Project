@@ -71,9 +71,6 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 
 //Body should contain {"id":"videoID", "value":"true/false/null"}
 router.post('/api/like', isAuth, async (req, res) => {
-
-    console.log("Like: " + req.body.value);
-    console.log(typeof req.body.value);
     
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
@@ -97,17 +94,28 @@ router.post('/api/like', isAuth, async (req, res) => {
     //Check if the previous value matches the given value. If so, throw an error.
     let rating = await RatingModel.findOne({ user: user._id, video: video._id });
     if (!rating) {
-        return res.status(200).json({ status: 'ERROR', error: true, message: 'View not found' });
+        rating = new RatingModel({
+            user: user._id,
+            video: video._id,
+            rating: req.body.value
+        })
+        await rating.save().catch((err) => {
+            return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+        })
     }
-    if (req.body.value !== null && rating.rating === req.body.value) {
-        return res.status(200).json({ status: 'ERROR', error: true, message: 'Rating is already given value' });
+    else {
+        if (req.body.value !== null && rating.rating === req.body.value) {
+            return res.status(200).json({ status: 'ERROR', error: true, message: 'Rating is already given value' });
+        }
+        rating.rating = req.body.value;
+        await rating.save().catch((err) => {
+            return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+        });
     }
-    rating.rating = req.body.value;
-    await rating.save().catch((err) => {
-        return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
-    });
-    console.log("Made it to the end!")
-    return res.status(200).json({ status: 'OK' });
+
+    //Get all current likes for the video
+    let totalRatings = await RatingModel.find({ video: video._id, rating: true });
+    return res.status(200).json({ status: 'OK', likes: totalRatings.length });
 });
 
 //Should call when video is first viewed by the user
@@ -126,18 +134,14 @@ router.post('/api/view', isAuth, async (req, res) => {
     }
 
     //Check if the user has already viewed the video
-    let rating = await RatingModel.findOne({ user: user._id, video: video._id });
-    if (rating) {
-        return res.status(200).json({ status: 'ERROR', error: true, message: 'Already viewed' });
+    if (user.watchHistory.includes(video._id)) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Video already viewed' });
     }
 
     //Add view to the video
-    const newRating = new RatingModel({
-        user: user._id,
-        video: video._id,
-        rating: null
-    });
-    await newRating.save().catch((err) => {
+    user.watchHistory.push(video._id);
+
+    await user.save().catch((err) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving view: ${err}` });
     });
 
@@ -186,7 +190,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
         let totalRatings = await RatingModel.find({ video: video._id });
         let views = totalRatings.length;
         let likes = totalRatings.filter((rating) => rating.rating === true).length;
-        let watched = totalRatings.filter((rating) => rating.user === user._id).length > 0;
+        let watched = user.watchHistory.includes(video._id);
         response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
     }
 
