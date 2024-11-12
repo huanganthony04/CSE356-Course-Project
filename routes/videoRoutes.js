@@ -135,7 +135,7 @@ router.post('/api/view', isAuth, async (req, res) => {
 
     //Check if the user has already viewed the video
     if (user.watchHistory.includes(video._id)) {
-        return res.status(200).json({ status: 'ERROR', error: true, message: 'Video already viewed' });
+        return res.status(200).json({ status: 'OK', viewed: true });
     }
 
     //Add view to the video
@@ -145,7 +145,7 @@ router.post('/api/view', isAuth, async (req, res) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving view: ${err}` });
     });
 
-    return res.status(200).json({ status: 'OK' });
+    return res.status(200).json({ status: 'OK', viewed: false });
 });
 
 //If { continue: true }, continue using the current recommendation list and return { count } videos (use for infinite scrolling)

@@ -182,7 +182,7 @@ router.post('/api/logout', (req, res) => {
 
 router.get('/api/isloggedin', (req, res) => {
     if (req.session.userId) {
-        return res.status(200).json({ status: 'OK' });
+        return res.status(200).json({ status: 'OK', userId: req.session.userId });
     }
     return res.status(200).json({ status: 'ERROR', error: true, message: 'You are not logged in' });
 });
