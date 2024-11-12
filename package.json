@@ -19,6 +19,7 @@
   "homepage": "https://github.com/huanganthony04/CSE-356-WP2#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "bullmq": "^5.25.6",
     "connect-mongodb-session": "^5.0.0",
     "cors": "^2.8.5",
     "dashjs": "^4.7.4",

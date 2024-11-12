@@ -15,16 +15,16 @@ const videoRoutes = require('./routes/videoRoutes');
 const app = express();
 const PORT = 8080;
 
-const mongoURI = 'mongodb://localhost:27017/CSE356';
+const mongoURI = 'mongodb://127.0.0.1:27017/CSE356';
 
 //Set up connection to mongo client
 mongoose.connect(mongoURI)
     .then(() => console.log('Connected to MongoDB'));
 
-const store = new MongoDBSession({
-    uri: mongoURI,
-    collection: 'sessions'
-});
+// const store = new MongoDBSession({
+//     uri: mongoURI,
+//     collection: 'sessions'
+// });
 
 app.use(morgan('combined'));
 
@@ -37,12 +37,12 @@ app.use(
 );
 
 
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: store
-}));
+// app.use(session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//     store: store
+// }));
 
 app.use(express.json());
 app.use((req, res, next) => {

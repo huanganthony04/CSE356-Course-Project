@@ -4,9 +4,11 @@ const session = require("express-session");
 const router = express.Router();
 const fs = require('fs');
 const crypto = require("crypto");
+const videoQueue = require('./../videoQueue');
+
 const {spawn,spawnSync, exec,execSync} = require("child_process")
 
-const {Worker,parentPort, MessageChannel } = require('worker_threads');
+//const {Worker,parentPort, MessageChannel } = require('worker_threads');
 
 // const multer  = require('multer');
 // const storage = multer.diskStorage({
@@ -40,6 +42,8 @@ const generateVideoArray = require('../Recommender/recommender');
 // const videoData = JSON.parse(fs.readFileSync('m1.json'));
 // const videoIDs = Object.keys(videoData);
 // All metadata is now in the database
+
+//Start up queue
 
 const isAuth = (req, res, next) => {
     if (req.session.userId) {
@@ -229,8 +233,8 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
     let insert_result = newvideo.save().catch((err) => {
         console.log("Error saving user: " + err);
     });
-    
-    const videoWorker = new Worker("./videoWorker.js", {workerData : { mp4File : req.file.buffer, uid : newuid}});
+    videoQueue.add('videoQueue', { mp4File : req.file.buffer, uid : newuid})
+    //const videoWorker = new Worker("./videoWorker.js", {workerData : { mp4File : req.file.buffer, uid : newuid}});
     // //Generate the new video record
     // let newvideo = new VideoModel({
     //     _id: newuid,
