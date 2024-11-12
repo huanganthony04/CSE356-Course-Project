@@ -39,15 +39,16 @@ import playButton from "./img/play-circle.svg"
 const Player = () => {
     const { videoId } = useParams()
     const [allVideos,setAllVideos] = useState([videoId]);
+    const [ user, setUser ] = useState('');
     const [falseBuffer, setFalseBuffer] = useState(["2018959-hd_1920_1080_30fps","2892038-uhd_3840_2160_30fps","3960164-uhd_2160_4096_25fps","4008176-uhd_2160_4096_25fps","4046200-hd_1920_1080_25fps"])
     const [cursor,setCursor] = useState(0);
 
-    let fetchMoreData = () =>{
+    let fetchData = () =>{
         axios.post("http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 3}).then(
             (response)=>{
                 let buffer = []
                 response.data.videos.forEach((value) =>{
-                    buffer.push(value.title)
+                    buffer.push(value.id)
                 })
 
                 setAllVideos(
@@ -60,6 +61,39 @@ const Player = () => {
             }
         ); 
     }
+
+    let fetchMoreData = () =>{
+        axios.post("http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 3, continue: true}).then(
+            (response)=>{
+                let buffer = []
+                response.data.videos.forEach((value) =>{
+                    buffer.push(value.id)
+                })
+
+                setAllVideos(
+                    [
+                        ...allVideos,
+                        ...buffer
+                    ]
+                )
+
+            }
+        ); 
+    }
+
+    useEffect(() => {
+        //Get authorization. If the user is not logged in, redirect to login page.
+        axios.get('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/isloggedin', { withCredentials: true })
+            .then((response) => {
+                if (response.data.error) {
+                    navigate('/login');
+                }
+                else {
+                    setUser(response.data.userId);
+                    fetchData();
+                }
+            })
+    }, []);
 
     let fetchTestData = () =>{
         setTimeout(() =>{
@@ -74,20 +108,22 @@ const Player = () => {
     }
 
     return (
-        <div className='infinite-scroll-container'>
+        <>
+            <h1>{`Logged in as ${user}`}</h1>
+            <div className='infinite-scroll-container'>
             <InfiniteScroll
                 dataLength={allVideos.length}
                 next={fetchMoreData}
                 hasMore={true}
                 loader={<h4>Loading...</h4>}
-                onScroll={console.log("hi!")}
                 >
                 {allVideos.map((i, index) => (
                     <PlayerContainer key={index} videoID={i} />
                 ))}
                 
             </InfiniteScroll>
-      </div>
+            </div>
+        </>
     )
 }
 
@@ -104,6 +140,7 @@ function PlayerContainer({videoID}){
     const refToBottom = useRef();
 
     useEffect(() =>{
+        console.log(videoID);
         //Get video from the videoID
         
         let manifest;
@@ -129,6 +166,9 @@ function PlayerContainer({videoID}){
         // setmpegdashPlayer(internalPlayer);
         //Real code used to make the request
         axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/view', {id : videoID})
+        .then((response) => {
+            console.log(`Viewed video ${videoID}`);
+        });
         manifest = `http://anthonysgroup.cse356.compas.cs.stonybrook.edu/media/${videoID}.mpd`
         let videoElement;
         let internalPlayer = dashjs.MediaPlayer().create()
@@ -210,10 +250,10 @@ function PlayerContainer({videoID}){
     }
 
     async function sendLikeRequest(event){
-        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/view', {id: videoID, value : "true"})
+        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/like', {id: videoID, value: true })
     }
     async function sendDislikeRequest(event){
-        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/view', {id: videoID, value : "false"})
+        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/like', {id: videoID, value: false })
     }
     return (
         <div id="mainContent" className="main-content">
@@ -237,8 +277,8 @@ function PlayerContainer({videoID}){
                     </div>
                 </div>
                 <div id='ratingButtonContainer' className='like-button-container'>
-                    <button onClick={sendLikeRequest}>Like</button>
-                    <button onClick={sendDislikeRequest}>Dislike</button>
+                    <button onClick={() => sendLikeRequest()}>Like</button>
+                    <button onClick={() => sendDislikeRequest()}>Dislike</button>
                 </div>
             </div>
             <div id="bottomAnchor" className="bottom-anchor" ref={refToBottom}>
