@@ -8,7 +8,7 @@ const {spawn,spawnSync, exec,execSync} = require("child_process")
 
 const VideoModel = require('../models/Video');
 
-const mongoURI = 'mongodb://localhost:27017/CSE356';
+const mongoURI = 'mongodb://admin:cse356courseproject@127.0.0.1:27017/CSE356?authSource=admin';
 //NOTE: Run this script in the root directory
 
 //Set up connection to mongo client

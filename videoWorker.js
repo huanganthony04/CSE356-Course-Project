@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const VideoModel = require('./models/Video');
 
 //MongoDB
-const mongoURI = 'mongodb://localhost:27017/CSE356';
+const mongoURI = 'mongodb://admin:cse356courseproject@127.0.0.1:27017/CSE356?authSource=admin';
 
 //Set up connection to mongo client
 mongoose.connect(mongoURI)

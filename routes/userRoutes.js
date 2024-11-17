@@ -47,7 +47,7 @@ router.post('/api/adduser', async (req, res) => {
         }
     });
 
-    const link = `http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/verify?email=${encodeURIComponent(email)}&key=${key}`;
+    const link = `https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/verify?email=${encodeURIComponent(email)}&key=${key}`;
 
     const mailOptions = {
         from: 'root@anthonysgroup.cse356.compas.cs.stonybrook.edu',

@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import { Recommender } from 'disco-rec';
 
 //Connect to the database
-mongoose.connect('mongodb://localhost:27017/CSE356');
+mongoose.connect('mongodb://admin:cse356courseproject@127.0.0.1:27017/CSE356?authSource=admin');
 
 //Build the rating matrix from all the users and their ratings on all the videos
 const buildFeedbackArray = async () => {

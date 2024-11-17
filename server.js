@@ -15,7 +15,7 @@ const videoRoutes = require('./routes/videoRoutes');
 const app = express();
 const PORT = 8080;
 
-const mongoURI = 'mongodb://127.0.0.1:27017/CSE356';
+const mongoURI = 'mongodb://admin:cse356courseproject@127.0.0.1:27017/CSE356?authSource=admin';
 
 //Set up connection to mongo client
 mongoose.connect(mongoURI)

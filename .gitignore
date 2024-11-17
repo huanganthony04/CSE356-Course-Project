@@ -144,3 +144,4 @@ public/thumbnails
 nohup.out
 /uploads
 /tmp
+/backup-database
