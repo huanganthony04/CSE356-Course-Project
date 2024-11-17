@@ -4,8 +4,14 @@ import VideoModel from '../models/Video.js';
 import mongoose from 'mongoose';
 import { Recommender } from 'disco-rec';
 
+import dotenv from 'dotenv';
+dotenv.config();
+const mongoURI = process.env.MONGOURI;
+
 //Connect to the database
-mongoose.connect('mongodb://admin:cse356courseproject@127.0.0.1:27017/CSE356?authSource=admin');
+mongoose.connect(mongoURI).catch((err) => {
+    console.log('Could not connect to DB: ' + err);
+});
 
 //Build the rating matrix from all the users and their ratings on all the videos
 const buildFeedbackArray = async () => {
