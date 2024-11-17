@@ -12,7 +12,7 @@ const VideoListElement = (props) => {
 
   return (
     <div className="video_list_element" onClick={handleClick}>
-      <img className="thumbnail" src={`http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/thumbnail/${props.id}`} alt="thumbnail"/>
+      <img className="thumbnail" src={`https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/thumbnail/${props.id}`} alt="thumbnail"/>
       <h4 className="description">{props.description}</h4>
     </div>
   )

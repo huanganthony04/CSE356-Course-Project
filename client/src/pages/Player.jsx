@@ -26,7 +26,7 @@ const Player = () => {
     const [allVideos, setAllVideos] = useState([videoId]);
 
     let fetchData = () =>{
-        axios.post("http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 6}).then(
+        axios.post("https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 6}).then(
             (response)=>{
                 let buffer = []
                 response.data.videos.forEach((value) =>{
@@ -42,7 +42,7 @@ const Player = () => {
     }
 
     let fetchMoreData = () =>{
-        axios.post("http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 6, continue: true}).then(
+        axios.post("https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/videos/",{count: 6, continue: true}).then(
             (response)=>{
                 let buffer = []
                 response.data.videos.forEach((value) =>{
@@ -56,7 +56,7 @@ const Player = () => {
     }
     useEffect(() => {
         //Get authorization. If the user is not logged in, redirect to login page.
-        axios.get('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/isloggedin', { withCredentials: true })
+        axios.get('https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/isloggedin', { withCredentials: true })
             .then((response) => {
                 if (response.data.error || response.data.userId === undefined) {
                     navigate('/login');
@@ -137,7 +137,7 @@ function PlayerContainer({index, videoID}){
                 focusPlayer();
 
                 //Add view
-                axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/view', {id : videoID})
+                axios.post('https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/view', {id : videoID})
                 .then((response) => {
                     console.log(`Viewed video ${videoID}`);
                 });
@@ -190,7 +190,7 @@ function PlayerContainer({index, videoID}){
         if (mpegdashPlayer == null) {
 
             //Initialize player
-            manifest = `http://anthonysgroup.cse356.compas.cs.stonybrook.edu/media/${videoID}.mpd`
+            manifest = `https://anthonysgroup.cse356.compas.cs.stonybrook.edu/media/${videoID}.mpd`
 
             let videoElement;
             let internalPlayer = dashjs.MediaPlayer().create()
@@ -237,10 +237,10 @@ function PlayerContainer({index, videoID}){
     }, [videoID, mpegdashPlayer])
 
     async function sendLikeRequest(event){
-        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/like', {id: videoID, value: true })
+        axios.post('https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/like', {id: videoID, value: true })
     }
     async function sendDislikeRequest(event){
-        axios.post('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/like', {id: videoID, value: false })
+        axios.post('https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/like', {id: videoID, value: false })
     }
     return (
         <div id="mainContent" className="main-content">

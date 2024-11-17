@@ -28,8 +28,8 @@ const worker = new Worker('videoQueue', async job => {
             cwd: '/root/cse356/Course-Project'
              },
              async (error, stdout, stderr) =>{
-                VideoModel.findOneAndUpdate({_id: newuid},{status: 'completed'})
-                 
+                 let result = await VideoModel.findOneAndUpdate({_id: newuid},{status: 'complete'},{new:true})
+                 console.log(result._doc.status)
          
                  fs.appendFile('./uploads/newvids.log', newuid + '\n', function (err) {
                      if (err) throw err;
@@ -49,7 +49,7 @@ const worker = new Worker('videoQueue', async job => {
   }, {connection,
         limiter: {
             max: 1,
-            duration: 1*1000*60*8
+            duration: 1000*60*1
         }
   });
 module.exports = videoQueue;

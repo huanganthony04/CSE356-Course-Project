@@ -29,7 +29,7 @@ function upload(){
         form.append('title', title)
         form.append('mp4File', video)
         let result = await axios.post(
-            'http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/upload', 
+            'https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/upload', 
             form,
             { withCredentials: true,
                 headers: {

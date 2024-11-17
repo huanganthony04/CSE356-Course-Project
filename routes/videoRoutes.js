@@ -238,7 +238,7 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
     let insert_result = newvideo.save().catch((err) => {
         console.log("Error saving user: " + err);
     });
-    //videoQueue.add('videoQueue', { mp4File : req.file.buffer, uid : newuid})
+    videoQueue.add('videoQueue', { mp4File : req.file.buffer, uid : newuid})
     //const videoWorker = new Worker("./videoWorker.js", {workerData : { mp4File : req.file.buffer, uid : newuid}});
     // //Generate the new video record
     // let newvideo = new VideoModel({
@@ -283,12 +283,13 @@ router.get('/api/processing-status', isAuth, async (req,res) => {
     let currentUser = req.session.userId
     //currentUser = 'testuser1' For test user
     let allUserVideos =  await VideoModel.find({'metadata.author' : currentUser}).lean().exec()
-    console.log(allUserVideos)
+    //console.log(allUserVideos)
     let response = []
     allUserVideos.forEach((video) => {
         response.push({id: video._id, title: video.metadata.title, status: video.status})
     })
     res.status(200).json({status: 'OK', videos: response})
+    console.log(response)
 });
 
 module.exports = router;

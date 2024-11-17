@@ -13,7 +13,7 @@ const Login = () => {
     useEffect(() => {
 
         //Get authorization. If the user is already logged in, redirect to main page.
-        axios.get('http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/isloggedin', { withCredentials: true })
+        axios.get('https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/isloggedin', { withCredentials: true })
             .then((response) => {
                 if (!response.data.error) {
                     navigate('/');
@@ -26,7 +26,7 @@ const Login = () => {
         
         //Use the login API route to try to log in.
         axios.post(
-            'http://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/login', 
+            'https://anthonysgroup.cse356.compas.cs.stonybrook.edu/api/login', 
             { username: username, password: password },
             { withCredentials: true }
         )
