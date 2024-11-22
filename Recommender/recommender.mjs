@@ -10,7 +10,7 @@ const mongoURI = process.env.MONGOURI;
 
 
 //Connect to the database
-mongoose.connect("mongodb://admin:cse356cpdbp@anthonysgroup.cse356.compas.cs.stonybrook.edu/CSE356?authSource=admin").catch((err) => {
+mongoose.connect(mongoURI).catch((err) => {
     console.log('Could not connect to DB: ' + err);
 });
 
