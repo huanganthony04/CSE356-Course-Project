@@ -167,7 +167,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
     //Create a recommendation array for the user if it doesn't exist, or regenerate if continue is false
     let recommendation = await RecommendationModel.findOne({ user: user._id });
     if (!recommendation) {
-        let videoArray = await generateVideoArray(user.username);
+        let videoArray = await generateVideoArray(user.username, req.body.itemId);
         recommendation = new RecommendationModel({
             user: user._id,
             videoIds: videoArray,
@@ -175,7 +175,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
         })
     }
     else if (!req.body.continue) {
-        let videoArray = await generateVideoArray(user.username);
+        let videoArray = await generateVideoArray(user.username, req.body.itemId);
         recommendation.videoIds = videoArray;
         recommendation.index = 0;
     }
@@ -195,9 +195,6 @@ router.post('/api/videos', isAuth, async (req, res) => {
         let watched = user.watchHistory.includes(video._id);
         response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
     }
-
-    console.log('videos sent: ');
-    console.log(response);
 
     return res.status(200).json({ status: 'OK', videos: response });
 });

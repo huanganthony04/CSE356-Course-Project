@@ -8,12 +8,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 const mongoURI = process.env.MONGOURI;
 
+
 //Connect to the database
-mongoose.connect(mongoURI).catch((err) => {
+mongoose.connect("mongodb://admin:cse356cpdbp@anthonysgroup.cse356.compas.cs.stonybrook.edu/CSE356?authSource=admin").catch((err) => {
     console.log('Could not connect to DB: ' + err);
 });
 
 //Build the rating matrix from all the users and their ratings on all the videos
+//TODO: Schedule this with CRON instead, this is very computationally expensive
 const buildFeedbackArray = async () => {
 
     let feedback = [];
@@ -21,6 +23,7 @@ const buildFeedbackArray = async () => {
     for (let rating of ratings) {
         let user = await UserModel.findOne({ _id: rating.user });
         let video = await VideoModel.findOne({ _id: rating.video });
+        console.log('Mongo time test');
         let score;
         if (rating.rating) {
             score = 1;
@@ -41,14 +44,19 @@ const buildFeedbackArray = async () => {
 
 }
 
-//Generate a video array for a given user
-const generateVideoArray = async (username) => {
+//Generate a video array for a given user. Similar videos are first, followed by recommendations, followed by unwatched videos, followed by watched videos.
+const generateVideoArray = async (username, itemId = null) => {
     
     const data = await buildFeedbackArray();
     let recommendations = [];
+    let similarItems = [];
     if (data.length > 0) {
         const recommender = new Recommender();
         recommender.fit(data);
+        if (itemId) {
+            similarItems = recommender.itemRecs(itemId);
+        }
+
         recommendations = recommender.userRecs(username);
     }
 
@@ -62,15 +70,27 @@ const generateVideoArray = async (username) => {
     let watchedVids = user.watchHistory;
 
     let array = new Array();
-    let set = new Set();
-
-    for(let watched of watchedVids) {
-        set.add(watched);
-    }
+    let watchedSet = new Set(watchedVids);
+    let similarSet = new Set(similarItems);
 
     //If recommendations contain watched videos, remove them and add them to front of watchedVids
     recommendations = recommendations.filter((rec) => {
-        if (set.has(rec.itemId)) {
+        if (watchedSet.has(rec.itemId)) {
+            watchedVids.unshift(rec.itemId);
+            return false;
+        }
+        //Remove videos in recommendations that are already present in similarItems to prevent duplicates
+        else if (similarSet.has(rec.itemId)) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    });
+
+    //If similarItems contain watched videos, remove them and add them to front of watchedVids
+    similarItems = similarItems.filter((rec) => {
+        if (watchedSet.has(rec.itemId)) {
             watchedVids.unshift(rec.itemId);
             return false;
         }
@@ -79,13 +99,18 @@ const generateVideoArray = async (username) => {
         }
     });
 
+
     for(let rec of recommendations) {
-        set.add(rec.itemId);
+        watchedSet.add(rec.itemId);
+    }
+    for(let rec of similarItems) {
+        watchedSet.add(rec.itemId);
     }
 
-    videos = videos.filter((video) => !set.has(video._id));
+    videos = videos.filter((video) => !watchedSet.has(video._id));
 
-    array = recommendations.map((rec) => rec.itemId);
+    array = similarItems.map((rec) => rec.itemId);
+    array = array.concat(recommendations.map((rec) => rec.itemId));
     array = array.concat(videos.map((video) => video._id));
     array = array.concat(watchedVids);
 
