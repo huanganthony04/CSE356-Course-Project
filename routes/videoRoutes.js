@@ -1,27 +1,9 @@
 const express = require('express');
 const path = require('path');
-const session = require("express-session");
 const router = express.Router();
-const fs = require('fs');
 const crypto = require("crypto");
 const videoQueue = require('./../videoQueue');
 
-const {spawn,spawnSync, exec,execSync} = require("child_process")
-
-//const {Worker,parentPort, MessageChannel } = require('worker_threads');
-
-// const multer  = require('multer');
-// const storage = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//         cb(null, path.join(__dirname, './../tmp/'))
-//     },
-//     filename: function (req, file, cb) {
-//         //Generate the UID, and test if there is a duplicate
-//         let tempid = crypto.randomBytes(8).toString("hex");
-        
-//         cb(null, 'processing-' + tempid + '.mp4')
-//     }
-//   })
 const multer = require('multer')
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
