@@ -22,7 +22,7 @@ const videoTestQueue = new Queue('video-test-queue', { connection });
 app.post('/api/upload' ,upload.single('mp4File'), (req,res) =>{
     newuid = crypto.randomBytes(8).toString("hex");
     res.status(200).json({})
-    videoTestQueue.add('videoProcess', { mp4File : req.file.buffer, uid : newuid})
+    videoTestQueue.add('videoProcess', { mp4File : req.file.buffer, uid : newuid},{ removeOnComplete: true, removeOnFail: true })
 })
 
 app.listen(PORT, () => {

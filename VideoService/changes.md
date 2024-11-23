@@ -32,8 +32,17 @@ POST /api/upload { author, title, description, mp4File}
 Upload a video to the site with title: title and author: author, description: description and mp4file: is the mp4 file.
 Response format: {id: string}
 
+Microservices
+MongoDB
+Video Encoding
+Video storage(?)
 
 1. Move ffmpeg off machine
-    1. Build a testing frontend point
+    1. Build a testing frontend point (DONE)
+    2. Assemble Docker Image
 2. Move storage to ceph
+    1. Integrate ceph to testing frontend point
 3. 
+
+Note on Ceph
+We will use Ceph, since we require multiple ffmpeg processors we can leverage their disks to meet the minimum >=3 nodes

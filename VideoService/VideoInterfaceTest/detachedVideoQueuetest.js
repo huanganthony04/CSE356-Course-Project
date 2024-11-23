@@ -19,7 +19,7 @@ const worker = new Worker('video-test-queue', async job => {
     try{
         let tempFileName = 'processing-' + newuid + '.mp4'
         let pathToTempFile = path.join(__dirname,'VideoDump'+childNumber,tempFileName)
-        let videofile = fs.writeFile(pathToTempFile, mp4File, ()=>{})
+        let videofile = fs.writeFileSync(pathToTempFile, mp4File)
     
         // exec(`sh ./VideoService/upload.sh ${pathToTempFile} ${newuid}`, {
         //     cwd: '/root/cse356/Course-Project'
@@ -39,7 +39,7 @@ const worker = new Worker('video-test-queue', async job => {
         //         }); 
         //          }
         //      )
-         
+        return
     }catch(err){
         console.log(err)
     }

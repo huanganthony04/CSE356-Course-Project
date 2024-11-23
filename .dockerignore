@@ -1,0 +1,8 @@
+.vscode
+client
+models
+node_modules
+public
+VideoService
+videoQueue.js
+videoWorker.js
