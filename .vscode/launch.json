@@ -16,6 +16,15 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch Queue",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/VideoService/VideoWorkerAndQueue/videoQueue.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Launch current server",
             "skipFiles": [
                 "<node_internals>/**"
