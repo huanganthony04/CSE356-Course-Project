@@ -5,7 +5,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 
 //Import models
-const VideoModel = require('./models/Video');
+const VideoModel = require('../../models/Video');
 
 //MongoDB
 require('dotenv').config();

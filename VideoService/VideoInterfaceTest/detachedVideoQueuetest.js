@@ -9,7 +9,7 @@ const childNumber = process.argv[2]
 const redisHost = "localhost"
 const connection = new IORedis({
     maxRetriesPerRequest: null,
-    port: 5131,
+    port: 6379,
     host: redisHost
 });
 

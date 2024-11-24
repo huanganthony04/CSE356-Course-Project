@@ -5,4 +5,5 @@ iptables -t nat -I OUTPUT -o ens3 -p tcp -m tcp --dport 25 -j DNAT --to-destinat
 pm2 start server.js
 
 cd ./client
-npm run dev
+npm run build
+serve -s dist -p 5173

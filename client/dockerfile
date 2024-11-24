@@ -4,5 +4,5 @@ FROM node:22-alpine
 WORKDIR /home
 COPY ./dist ./dist
 RUN npm install serve -g
-EXPOSE 8001:5173
-CMD [ "serve", -s, "dist" ]
+EXPOSE 5173:5173
+CMD [ "serve", -s, "dist", "-p", "5173"]

@@ -25,7 +25,6 @@ const store = new MongoDBSession({
     uri: mongoURI,
     collection: 'sessions'
 });
-
 app.use(morgan('combined'));
 
 //Added for communication with frontend through axios

@@ -2,10 +2,22 @@ const express = require('express');
 const path = require('path');
 const router = express.Router();
 const crypto = require("crypto");
-const videoQueue = require('./../videoQueue');
+const IORedis = require('ioredis')
+const {Queue, Worker} = require('bullmq');
 
 const multer = require('multer')
-const storage = multer.memoryStorage()
+//const storage = multer.memoryStorage()
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, './../tmp/'))
+    },
+    filename: function (req, file, cb) {
+        //Generate the UID, and test if there is a duplicate
+        let tempid = crypto.randomBytes(8).toString("hex");
+        
+        cb(null, 'processing-' + tempid + '.mp4')
+    }
+  })
 const upload = multer({ storage: storage })
 
 //Having issues installing hashlib, disabling for now
@@ -26,6 +38,11 @@ const generateVideoArray = require('../Recommender/recommender');
 // All metadata is now in the database
 
 //Start up queue
+const redisHost = "localhost"
+const connection = new IORedis({
+    maxRetriesPerRequest: null
+});
+let videoQueue = new Queue('videoQueue', { connection });
 
 const isAuth = (req, res, next) => {
     if (req.session.userId) {
@@ -182,6 +199,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
 });
 
 router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
+    //author, title, description, mp4File
 
     if(!req.file) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing file'});
@@ -194,6 +212,14 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
     }
     
     let newuid;
+    
+    let description;
+    if(!req.body.description) {
+        description = " "
+    }else{
+        description = req.body.description
+    }
+    
     while(true){
         newuid = crypto.randomBytes(8).toString("hex");
         let existingUID = await VideoModel.findOne({_id: newuid});
@@ -208,7 +234,7 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
         _id: newuid,
         metadata: {
             title: req.body.title,
-            description: "none",
+            description: description,
             author: req.body.author
         }
     });
@@ -217,52 +243,14 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
     let insert_result = newvideo.save().catch((err) => {
         console.log("Error saving user: " + err);
     });
-    videoQueue.add('videoQueue', { mp4File : req.file.buffer, uid : newuid})
-    //const videoWorker = new Worker("./videoWorker.js", {workerData : { mp4File : req.file.buffer, uid : newuid}});
-    // //Generate the new video record
-    // let newvideo = new VideoModel({
-    //     _id: newuid,
-    //     metadata: {
-    //         title: req.body.title,
-    //         description: "none",
-    //         author: req.body.author
-    //     }
-    // });
-    // //Insert into database
-    // let insert_result = newvideo.save().catch((err) => {
-    //     console.log("Error saving user: " + err);
-    // });
-
-    // //Upload works
-    // //Will reimplement with a threadpool and moved off to another machine
-    // exec(`sh ./VideoService/upload.sh ${req.file.path} ${newuid}`, {
-    //    cwd: '/root/cse356/Course-Project'
-    // },
-    //     async (error, stdout, stderr) =>{
-    //         insert_result.then(() =>{
-    //             VideoModel.findOneAndUpdate({_id: newuid},{status: 'completed'})
-    //         })
-            
-
-    //         fs.appendFile('/root/cse356/Course-Project/uploads/newvids.log', newuid + '\n', function (err) {
-    //             if (err) throw err;
-    //             console.log('Saved!');
-    //         });
-
-    //         //Delete the temp mp4 file
-    //         fs.unlink(req.file.path, (err) => {
-    //             if (err) throw err;
-    //             console.log('The file was deleted');
-    //         }); 
-    // })
-
     res.status(200).json({status: 'OK', id: newuid})
+
+    videoQueue.add('processVideo', { mp4File : req.file.path, uid : newuid},{ removeOnComplete: true, removeOnFail: true })
 });
 router.get('/api/processing-status', isAuth, async (req,res) => {
     let currentUser = req.session.userId
-    //currentUser = 'testuser1' For test user
     let allUserVideos =  await VideoModel.find({'metadata.author' : currentUser}).lean().exec()
-    //console.log(allUserVideos)
+
     let response = []
     allUserVideos.forEach((video) => {
         response.push({id: video._id, title: video.metadata.title, status: video.status})
