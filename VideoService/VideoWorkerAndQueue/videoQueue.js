@@ -32,7 +32,7 @@ videoWorker.on('completed', async (job) => {
     });
     let result = await VideoModel.findOneAndUpdate({_id: newuid},{status: 'complete'},{new:true})
     console.log(result._doc.status)
-    
+
     //Delete the temp mp4 file
     fs.unlink(job.data.mp4File, (err) => {
         if (err) throw err;

@@ -7,7 +7,6 @@ const metadataSchema = new Schema({
     },
     description: {
         type: String,
-        required: true,
     },
     author:{
         //Use the username of the user
