@@ -4,21 +4,25 @@ const router = express.Router();
 const crypto = require("crypto");
 const IORedis = require('ioredis')
 const {Queue, Worker} = require('bullmq');
+const fs = require('fs')
 
-const multer = require('multer')
-//const storage = multer.memoryStorage()
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, './../tmp/'))
-    },
-    filename: function (req, file, cb) {
-        //Generate the UID, and test if there is a duplicate
-        let tempid = crypto.randomBytes(8).toString("hex");
+//File handling solution
+// const multer = require('multer')
+// //const storage = multer.memoryStorage()
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, path.join(__dirname, './../tmp/'))
+//     },
+//     filename: function (req, file, cb) {
+//         //Generate the UID, and test if there is a duplicate
+//         let tempid = crypto.randomBytes(8).toString("hex");
         
-        cb(null, 'processing-' + tempid + '.mp4')
-    }
-  })
-const upload = multer({ storage: storage })
+//         cb(null, 'processing-' + tempid + '.mp4')
+//     }
+//   })
+// const upload = multer({ storage: storage })
+const busboy = require('busboy')
+
 
 //Having issues installing hashlib, disabling for now
 //const hashlib = require('hashlib');
@@ -31,6 +35,7 @@ const RecommendationModel = require('../models/Recommendation');
 
 //Import recommender
 const generateVideoArray = require('../Recommender/recommender');
+const { title } = require('process');
 
 //Import video metadata
 // const videoData = JSON.parse(fs.readFileSync('m1.json'));
@@ -198,28 +203,12 @@ router.post('/api/videos', isAuth, async (req, res) => {
     return res.status(200).json({ status: 'OK', videos: response });
 });
 
-router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
+//Check if no file
+//What to do if we have an empty field, or non-existant field?
+router.post('/api/upload' ,async (req,res) => {
     //author, title, description, mp4File
 
-    if(!req.file) {
-        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing file'});
-    }
-    if(!req.body.author) {
-        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing author'});
-    }
-    if(!req.body.title) {
-        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing title'});
-    }
-    
-    let newuid;
-    
-    let description;
-    if(!req.body.description) {
-        description = " "
-    }else{
-        description = req.body.description
-    }
-    
+    let fileExists = false
     while(true){
         newuid = crypto.randomBytes(8).toString("hex");
         let existingUID = await VideoModel.findOne({_id: newuid});
@@ -228,24 +217,83 @@ router.post('/api/upload', upload.single('mp4File') ,async (req,res) => {
             break;
         }
     }
+    let reqBody = {}
+    let fieldCount = 0
+    const bb = busboy({ headers: req.headers, limits : {fields: 3, files: 1} });
+    bb.on('file', function(fieldname, file, info) {
+        fileExists = true
+        const { filename, encoding, mimeType } = info;
+        let newfilename = 'processing-' + newuid + '.mp4'
+        var saveTo = path.join(__dirname,'..', 'tmp',newfilename);
+        console.log('Uploading: ' + saveTo);
+        file.pipe(fs.createWriteStream(saveTo));
+    });
+    bb.on('field', function(name,val,info){
+        fieldCount++
+        console.log(`Field [${name}]: value: %j`, val);
+        reqBody[name] = val
+        if(fieldCount == 3){
 
-    //Generate the new video record
-    let newvideo = new VideoModel({
-        _id: newuid,
-        metadata: {
-            title: req.body.title,
-            description: description,
-            author: req.body.author
+            if(reqBody.author == '') {
+                return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing author'});
+            }
+            if(reqBody.title == '') {
+                return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing title'});
+            }
+            res.status(200).json({status: 'OK', id: newuid})
         }
-    });
+    })
+    bb.on('close', function() {
+        
 
-    //Insert into database
-    let insert_result = newvideo.save().catch((err) => {
-        console.log("Error saving user: " + err);
     });
-    res.status(200).json({status: 'OK', id: newuid})
+    
+    req.pipe(bb);
+    // if(!req.file) {
+    //     return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing file'});
+    // }
+    // if(!req.body.author) {
+    //     return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing author'});
+    // }
+    // if(!req.body.title) {
+    //     return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing title'});
+    // }
+    
+    // let newuid;
+    
+    // let description;
+    // if(!req.body.description) {
+    //     description = " "
+    // }else{
+    //     description = req.body.description
+    // }
+    
+    // while(true){
+    //     newuid = crypto.randomBytes(8).toString("hex");
+    //     let existingUID = await VideoModel.findOne({_id: newuid});
 
-    videoQueue.add('processVideo', { mp4File : req.file.path, uid : newuid},{ removeOnComplete: true, removeOnFail: true })
+    //     if(!existingUID){
+    //         break;
+    //     }
+    // }
+
+    // //Generate the new video record
+    // let newvideo = new VideoModel({
+    //     _id: newuid,
+    //     metadata: {
+    //         title: req.body.title,
+    //         description: description,
+    //         author: req.body.author
+    //     }
+    // });
+
+    // //Insert into database
+    // let insert_result = newvideo.save().catch((err) => {
+    //     console.log("Error saving user: " + err);
+    // });
+    // res.status(200).json({status: 'OK', id: newuid})
+
+    // videoQueue.add('processVideo', { mp4File : req.file.path, uid : newuid},{ removeOnComplete: true, removeOnFail: true })
 });
 router.get('/api/processing-status', isAuth, async (req,res) => {
     let currentUser = req.session.userId
