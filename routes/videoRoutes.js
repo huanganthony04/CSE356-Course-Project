@@ -45,7 +45,7 @@ const { title } = require('process');
 //Start up queue
 const redisHost = "localhost"
 const connection = new IORedis({
-    maxRetriesPerRequest: null
+    maxRetriesPerRequest: null,
 });
 let videoQueue = new Queue('videoQueue', { connection });
 
@@ -209,6 +209,7 @@ router.post('/api/upload' ,async (req,res) => {
     //author, title, description, mp4File
 
     let fileExists = false
+    let newuid;
     while(true){
         newuid = crypto.randomBytes(8).toString("hex");
         let existingUID = await VideoModel.findOne({_id: newuid});
@@ -217,21 +218,25 @@ router.post('/api/upload' ,async (req,res) => {
             break;
         }
     }
+    console.log(newuid)
+    let newfilename = 'processing-' + newuid + '.mp4'
+    let tempPathFile = path.join(__dirname,'..', 'tmp',newfilename);
+
     let reqBody = {}
     let fieldCount = 0
-    const bb = busboy({ headers: req.headers, limits : {fields: 3, files: 1} });
+    const bb = busboy({ headers: req.headers });
     bb.on('file', function(fieldname, file, info) {
         fileExists = true
-        const { filename, encoding, mimeType } = info;
-        let newfilename = 'processing-' + newuid + '.mp4'
-        var saveTo = path.join(__dirname,'..', 'tmp',newfilename);
-        console.log('Uploading: ' + saveTo);
-        file.pipe(fs.createWriteStream(saveTo));
+        file.pipe(fs.createWriteStream(tempPathFile));
+
     });
     bb.on('field', function(name,val,info){
         fieldCount++
         console.log(`Field [${name}]: value: %j`, val);
         reqBody[name] = val
+        
+    })
+    bb.on('finish', function() {
         if(fieldCount == 3){
 
             if(reqBody.author == '') {
@@ -242,9 +247,22 @@ router.post('/api/upload' ,async (req,res) => {
             }
             res.status(200).json({status: 'OK', id: newuid})
         }
-    })
-    bb.on('close', function() {
-        
+        console.log('finished reading!')
+        //Generate the new video record
+        let newvideo = new VideoModel({
+            _id: newuid,
+            metadata: {
+                title: reqBody.title,
+                description: reqBody.description,
+                author: reqBody.author
+            }
+        });
+
+        // //Insert into database
+        let insert_result = newvideo.save().catch((err) => {
+            console.log("Error saving user: " + err);
+        });
+        videoQueue.add('processVideo', { mp4File : tempPathFile, uid : newuid},{ removeOnComplete: true, removeOnFail: true })
 
     });
     

@@ -15,7 +15,7 @@ const VideoModel = require('../../models/Video');
 
 //Import worker
 const videoWorkerFile = path.join(__dirname, 'videoWorker.js');
-
+const redisHost = "localhost"
 const connection = new IORedis({
     maxRetriesPerRequest: null
 });
