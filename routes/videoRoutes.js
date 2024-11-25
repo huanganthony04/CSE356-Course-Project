@@ -52,7 +52,7 @@ const { title } = require('process');
 // });
 const connection = new IORedis({
     maxRetriesPerRequest: null,
-    password: process.env.REDISPASS
+    password: process.env.REDIS_PASSWORD
 });
 let videoQueue = new Queue('videoQueue', { connection });
 
@@ -86,14 +86,14 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 
 //Body should contain {"id":"videoID", "value":"true/false/null"}
 router.post('/api/like', isAuth, async (req, res) => {
-
+    console.time('request')
     let userPromise = UserModel.findOne({ username: req.session.userId }).exec()
+    let videoPromise = VideoModel.findOne({ '_id': req.body.id }, 'metadata').exec()
+    let ratingPromise = RatingModel.findOne({ user: req.session.userId, video: req.body.id }).exec()
 
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
-
-    let videoPromise = VideoModel.findOne({ '_id': req.body.id }, 'metadata').exec()
 
     if(req.body.value === undefined) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing like value' });
@@ -125,7 +125,7 @@ router.post('/api/like', isAuth, async (req, res) => {
         }
         return [user,video]
     })
-
+    
     if(!existenceTest){
         return
     }
@@ -133,11 +133,12 @@ router.post('/api/like', isAuth, async (req, res) => {
     let video = existenceTest[1]
     //Check if the previous value matches the given value. If so, throw an error.
     //POSSIBLE BUG: catch errors do not terminate
-    let rating = await RatingModel.findOne({ user: user._id, video: video._id });
+    let rating = await ratingPromise
+
     if (!rating) {
         rating = new RatingModel({
-            user: user._id,
-            video: video._id,
+            user: req.session.userId,
+            video: req.body.id,
             rating: req.body.value
         })
 
@@ -166,7 +167,9 @@ router.post('/api/like', isAuth, async (req, res) => {
     //Get all current likes for the video
     let totalRatings = await RatingModel.find({ video: video._id, rating: true });
 
-    return res.status(200).json({ status: 'OK', likes: totalRatings.length });
+    res.status(200).json({ status: 'OK', likes: totalRatings.length });
+    console.timeEnd('request')
+
 });
 
 //Should call when video is first viewed by the user
