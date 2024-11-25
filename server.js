@@ -17,6 +17,30 @@ const videoRoutes = require('./routes/videoRoutes');
 const app = express();
 const PORT = 8080;
 
+//Set up connection to Redis
+const { createClient } = require('redis');
+const client = createClient({
+    url: process.env.REDIS_URL,
+    password: process.env.REDIS_PASSWORD
+});
+
+client.on('connect', () => {
+    console.log('Connected to Redis');
+});
+
+try {
+    client.connect();
+}
+catch (err) {
+    console.log(err);
+}
+
+app.use((req, res, next) => {
+    res.redis = client;
+    next();
+});
+
+
 //Set up connection to mongo client
 mongoose.connect(mongoURI)
     .then(() => console.log('Connected to MongoDB'));
