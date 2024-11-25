@@ -123,6 +123,7 @@ router.post('/api/like', isAuth, async (req, res) => {
 
     //Get all current likes for the video
     let totalRatings = await RatingModel.find({ video: video._id, rating: true });
+
     return res.status(200).json({ status: 'OK', likes: totalRatings.length });
 });
 
@@ -159,10 +160,7 @@ router.post('/api/view', isAuth, async (req, res) => {
 //If { continue: true }, continue using the current recommendation list and return { count } videos (use for infinite scrolling)
 //Otherwise regenerate the recommendation list for the current user and return { count } videos
 router.post('/api/videos', isAuth, async (req, res) => {
-    if (req.body.videoId) {
-        console.log('Video ID: ' + req.body.videoId);
-    }
-    console.log('User ID: ' + req.session.userId);
+
     if(!req.body.count) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
     }
@@ -172,39 +170,63 @@ router.post('/api/videos', isAuth, async (req, res) => {
         return res.json({ status: 'ERROR', error: true, message: 'User not found' });
     }
 
-    //Create a recommendation array for the user if it doesn't exist, or regenerate if continue is false
-    let recommendation = await RecommendationModel.findOne({ user: user._id });
-    if (!recommendation) {
-        let videoArray = await generateVideoArray(user.username, req.body.videoId);
-        recommendation = new RecommendationModel({
-            user: user._id,
-            videoIds: videoArray,
-            index: 0
-        })
+    if(!req.body.videoId) {
+        //Old system used in infinite scroll.
+        //Create a recommendation array for the user if it doesn't exist, or regenerate if continue is false
+        let recommendation = await RecommendationModel.findOne({ user: user._id });
+        if (!recommendation) {
+            let videoArray = await generateVideoArray(user.username);
+            recommendation = new RecommendationModel({
+                user: user._id,
+                videoIds: videoArray,
+                index: 0
+            })
+        }
+        else if (!req.body.continue) {
+            let videoArray = await generateVideoArray(user.username);
+            recommendation.videoIds = videoArray;
+            recommendation.index = 0;
+        }
+
+        let videos = recommendation.videoIds.slice(recommendation.index, recommendation.index + req.body.count);
+        recommendation.index += req.body.count;
+
+        recommendation.save();
+
+        let response = [];
+
+        for(let i = 0; i < req.body.count; i++) {
+            let video = await VideoModel.findOne({ _id: videos[i] }, 'metadata');
+            let totalRatings = await RatingModel.find({ video: video._id });
+            let views = totalRatings.length;
+            let likes = totalRatings.filter((rating) => rating.rating === true).length;
+            let watched = user.watchHistory.includes(video._id);
+            response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
+        }
+
+        console.log(response);
+        return res.status(200).json({ status: 'OK', videos: response });
     }
-    else if (!req.body.continue) {
-        let videoArray = await generateVideoArray(user.username, req.body.videoId);
-        recommendation.videoIds = videoArray;
-        recommendation.index = 0;
+    else {
+
+        console.log("video with params: " + req.session.userId, req.body.videoId, req.body.count);
+
+        //VideoID provided, use for video based recommendation
+        let videoArray = await generateVideoArray(user.username, req.body.videoId, req.body.count);
+        let response = [];
+
+        for (let videoId of videoArray) {
+            let video = await VideoModel.findOne({ _id: videoId }, 'metadata');
+            let totalRatings = await RatingModel.find({ video: video._id });
+            let views = totalRatings.length;
+            let likes = totalRatings.filter((rating) => rating.rating === true).length;
+            let watched = user.watchHistory.includes(video._id);
+            response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
+        }
+        console.log(response);
+        return res.status(200).json({ status: 'OK', videos: response });
     }
 
-    let videos = recommendation.videoIds.slice(recommendation.index, recommendation.index + req.body.count);
-    recommendation.index += req.body.count;
-
-    recommendation.save();
-
-    let response = [];
-
-    for(let i = 0; i < req.body.count; i++) {
-        let video = await VideoModel.findOne({ _id: videos[i] }, 'metadata');
-        let totalRatings = await RatingModel.find({ video: video._id });
-        let views = totalRatings.length;
-        let likes = totalRatings.filter((rating) => rating.rating === true).length;
-        let watched = user.watchHistory.includes(video._id);
-        response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
-    }
-
-    return res.status(200).json({ status: 'OK', videos: response });
 });
 
 //Check if no file

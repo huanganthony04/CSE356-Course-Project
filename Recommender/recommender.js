@@ -6,8 +6,6 @@ const loadModule = async () => {
 module.exports = (username, videoId, count) => {
     return loadModule().then(({ generateVideoArray, generateVideoArrayVideoBased }) => {
         if (videoId) {
-            console.log('VB');
-            console.log(generateVideoArrayVideoBased)
             return generateVideoArrayVideoBased(username, videoId, count);
         }
         else {

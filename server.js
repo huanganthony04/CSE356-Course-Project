@@ -25,7 +25,6 @@ const store = new MongoDBSession({
     uri: mongoURI,
     collection: 'sessions'
 });
-app.use(morgan('combined'));
 
 //Added for communication with frontend through axios
 app.use(
@@ -34,6 +33,8 @@ app.use(
         credentials: true,
     })
 );
+
+app.use(morgan('dev'));
 
 
 app.use(session({

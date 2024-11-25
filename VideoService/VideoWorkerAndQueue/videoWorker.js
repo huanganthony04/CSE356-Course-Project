@@ -16,7 +16,7 @@ module.exports = async (job) => {
     let pathToTempFile = job.data.mp4File
     try{
     
-        execSync(`sh ./VideoService/upload_test.sh ${pathToTempFile} ${newuid}`, {cwd: '/root/cse356/Course-Project'})
+        execSync(`sh ./VideoService/upload.sh ${pathToTempFile} ${newuid}`, {cwd: '/root/cse356/Course-Project'})
          
     }catch(err){
         console.log(err)
