@@ -3,7 +3,6 @@ const path = require('path');
 const router = express.Router();
 const crypto = require("crypto");
 const IORedis = require('ioredis')
-const { createClient } = require('redis');
 const {Queue, Worker} = require('bullmq');
 const fs = require('fs')
 require('dotenv').config();
@@ -54,12 +53,6 @@ const connection = new IORedis({
 
 let videoQueue = new Queue('videoQueue', { connection });
 
-//Get redis connection
-const client = createClient({
-    url: process.env.REDIS_URL,
-    password: process.env.REDIS_PASSWORD
-});
-
 const isAuth = (req, res, next) => {
     if (req.session.userId) {
         next();
@@ -89,18 +82,59 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 });
 
 //Body should contain {"id":"videoID", "value":"true/false/null"}
-router.post('/api/like', async (req, res) => {
-    
-    let request = {request: "like", id: req.body.id, value: req.body.value};
-    let redisClient = res.redis;
-    redisClient.publish(process.env.REDIS_CHANNEL, JSON.stringify(request));
+router.post('/api/like', isAuth, async (req, res) => {
 
-    res.status(200).json({ status: 'OK' });
+    if (!req.body.id) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
+    }
+    if(req.body.value === undefined) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing like value' });
+    }
+    if(req.body.value !== true && req.body.value !== false && req.body.value !== null) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid like value' });
+    }
 
+    console.log('test1');
+    const [user, video, rating] = await Promise.all([
+        UserModel.findOne({ username: req.session.userId }),
+          VideoModel.findOne({ _id: req.body.id }, 'metadata'),
+          RatingModel.findOne({ user: req.session.userId, video: req.body.id }),
+    ]);
+
+    console.log('test2');
+
+    if (!user || !video) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'User or video not found' });
+    }
+
+    if (!rating) {
+        let rating = new RatingModel({
+            user: req.session.userId,
+            video: req.body.id,
+            rating: req.body.value
+        })
+        await rating.save().catch((err) => {
+            return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+        })
+    }
+    else {
+        if (req.body.value !== null && rating.rating === req.body.value) {
+            return res.status(200).json({ status: 'ERROR', error: true, message: 'Rating is already given value' });
+        }
+        rating.rating = req.body.value;
+        await rating.save().catch((err) => {
+            return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+        });
+    }
+
+    let totalRatings = await RatingModel.find({ video: req.body.id, rating: true });
+
+    return res.status(200).json({ status: 'OK', likes: totalRatings.length });
 });
 
 //Should call when video is first viewed by the user
 router.post('/api/view', isAuth, async (req, res) => {
+
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
@@ -145,11 +179,11 @@ router.post('/api/videos', isAuth, async (req, res) => {
     if(!req.body.videoId) {
         //Old system used in infinite scroll.
         //Create a recommendation array for the user if it doesn't exist, or regenerate if continue is false
-        let recommendation = await RecommendationModel.findOne({ user: user._id });
+        let recommendation = await RecommendationModel.findOne({ user: user.username });
         if (!recommendation) {
             let videoArray = await generateVideoArray(user.username);
             recommendation = new RecommendationModel({
-                user: user._id,
+                user: req.session.userId,
                 videoIds: videoArray,
                 index: 0
             })

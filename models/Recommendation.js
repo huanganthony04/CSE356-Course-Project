@@ -3,8 +3,7 @@ const Schema = mongoose.Schema;
 
 const RecommendationSchema = new Schema({
     user: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
+        type: String,
         required: true
     },
     videoIds: [{
