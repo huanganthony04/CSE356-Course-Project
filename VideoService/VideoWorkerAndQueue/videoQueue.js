@@ -17,7 +17,8 @@ const VideoModel = require('../../models/Video');
 const videoWorkerFile = path.join(__dirname, 'videoWorker.js');
 const redisHost = "localhost"
 const connection = new IORedis({
-    maxRetriesPerRequest: null
+    maxRetriesPerRequest: null,
+    password: process.env.REDIS_PASSWORD
 });
 
 const videoWorker = new Worker('videoQueue', videoWorkerFile, {connection, concurrency: 1});

@@ -20,7 +20,7 @@ const buildFeedbackArray = async () => {
     let feedback = [];
     let ratings = await RatingModel.find();
     for (let rating of ratings) {
-        let user = await UserModel.findOne({ _id: rating.user });
+        let user = await UserModel.findOne({ username: rating.user });
         let video = await VideoModel.findOne({ _id: rating.video });
         let score;
         if (rating.rating) {
@@ -46,6 +46,7 @@ const buildFeedbackArray = async () => {
 const generateVideoArray = async (username) => {
     
     const data = await buildFeedbackArray();
+
     let recommendations = [];
     if (data.length > 0) {
         const recommender = new Recommender();
@@ -169,6 +170,7 @@ const generateVideoArrayVideoBased = async (username, itemId, count) => {
 
 }
 
+/*
 async function test(username, itemId, count) {
     console.log('test');
     let recs = await generateVideoArrayVideoBased(username, itemId, count);
@@ -182,5 +184,6 @@ try {
 catch (err) {
     console.log('Error testing: ' + err);
 }
+*/
 
 export { generateVideoArray, generateVideoArrayVideoBased };

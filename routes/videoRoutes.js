@@ -86,7 +86,9 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 
 //Body should contain {"id":"videoID", "value":"true/false/null"}
 router.post('/api/like', isAuth, async (req, res) => {
-    console.time('request')
+    console.time(`request ${req.id}`)
+    console.time(`errorchecking ${req.id}`)
+
     let userPromise = UserModel.findOne({ username: req.session.userId }).exec()
     let videoPromise = VideoModel.findOne({ '_id': req.body.id }, 'metadata').exec()
     let ratingPromise = RatingModel.findOne({ user: req.session.userId, video: req.body.id }).exec()
@@ -129,6 +131,9 @@ router.post('/api/like', isAuth, async (req, res) => {
     if(!existenceTest){
         return
     }
+    console.timeEnd(`errorchecking ${req.id}`)
+    console.time(`processing ${req.id}`)
+
     let user = existenceTest[0]
     let video = existenceTest[1]
     //Check if the previous value matches the given value. If so, throw an error.
@@ -164,11 +169,13 @@ router.post('/api/like', isAuth, async (req, res) => {
         
     }
 
+    console.timeEnd(`processing ${req.id}`)
+
     //Get all current likes for the video
     let totalRatings = await RatingModel.find({ video: video._id, rating: true });
 
     res.status(200).json({ status: 'OK', likes: totalRatings.length });
-    console.timeEnd('request')
+    console.timeEnd(`request ${req.id}`)
 
 });
 
@@ -217,6 +224,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
     }
 
     if(!req.body.videoId) {
+        console.log('test');
         //Old system used in infinite scroll.
         //Create a recommendation array for the user if it doesn't exist, or regenerate if continue is false
         let recommendation = await RecommendationModel.findOne({ user: user.username });
@@ -236,6 +244,8 @@ router.post('/api/videos', isAuth, async (req, res) => {
 
         let videos = recommendation.videoIds.slice(recommendation.index, recommendation.index + req.body.count);
         recommendation.index += req.body.count;
+
+        console.log(recommendation);
 
         recommendation.save();
 
