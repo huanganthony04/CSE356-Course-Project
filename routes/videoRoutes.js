@@ -159,6 +159,10 @@ router.post('/api/view', isAuth, async (req, res) => {
 //If { continue: true }, continue using the current recommendation list and return { count } videos (use for infinite scrolling)
 //Otherwise regenerate the recommendation list for the current user and return { count } videos
 router.post('/api/videos', isAuth, async (req, res) => {
+    if (req.body.videoId) {
+        console.log('Video ID: ' + req.body.videoId);
+    }
+    console.log('User ID: ' + req.session.userId);
     if(!req.body.count) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
     }
@@ -171,7 +175,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
     //Create a recommendation array for the user if it doesn't exist, or regenerate if continue is false
     let recommendation = await RecommendationModel.findOne({ user: user._id });
     if (!recommendation) {
-        let videoArray = await generateVideoArray(user.username, req.body.itemId);
+        let videoArray = await generateVideoArray(user.username, req.body.videoId);
         recommendation = new RecommendationModel({
             user: user._id,
             videoIds: videoArray,
@@ -179,7 +183,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
         })
     }
     else if (!req.body.continue) {
-        let videoArray = await generateVideoArray(user.username, req.body.itemId);
+        let videoArray = await generateVideoArray(user.username, req.body.videoId);
         recommendation.videoIds = videoArray;
         recommendation.index = 0;
     }
@@ -218,7 +222,7 @@ router.post('/api/upload' ,async (req,res) => {
             break;
         }
     }
-    console.log(newuid)
+    //console.log(newuid)
     let newfilename = 'processing-' + newuid + '.mp4'
     let tempPathFile = path.join(__dirname,'..', 'tmp',newfilename);
 
@@ -232,7 +236,7 @@ router.post('/api/upload' ,async (req,res) => {
     });
     bb.on('field', function(name,val,info){
         fieldCount++
-        console.log(`Field [${name}]: value: %j`, val);
+        //console.log(`Field [${name}]: value: %j`, val);
         reqBody[name] = val
         
     })
@@ -247,7 +251,7 @@ router.post('/api/upload' ,async (req,res) => {
             }
             res.status(200).json({status: 'OK', id: newuid})
         }
-        console.log('finished reading!')
+        //console.log('finished reading!')
         //Generate the new video record
         let newvideo = new VideoModel({
             _id: newuid,
@@ -322,7 +326,7 @@ router.get('/api/processing-status', isAuth, async (req,res) => {
         response.push({id: video._id, title: video.metadata.title, status: video.status})
     })
     res.status(200).json({status: 'OK', videos: response})
-    console.log(response)
+    //console.log(response)
 });
 
 module.exports = router;

@@ -163,14 +163,11 @@ router.post('/api/login', async (req, res) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'User is not verified' });
     }
 
-    console.log('test');
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log('bcrypt works!');
     if (!isMatch) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid credentials' });
     }
     req.session.userId = username;
-    console.log('session set!');
     return res.status(200).json({ status: 'OK' });
 });
 

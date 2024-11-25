@@ -1,10 +1,17 @@
 const loadModule = async () => {
-    const { default: generateVideoArray } = await import('./recommender.mjs');
-    return generateVideoArray;
+    const { generateVideoArray, generateVideoArrayVideoBased } = await import('./recommender.mjs');
+    return { generateVideoArray, generateVideoArrayVideoBased };
 }
 
-module.exports = (...args) => {
-    return loadModule().then((generateVideoArray) => {
-        return generateVideoArray(...args);
+module.exports = (username, videoId, count) => {
+    return loadModule().then(({ generateVideoArray, generateVideoArrayVideoBased }) => {
+        if (videoId) {
+            console.log('VB');
+            console.log(generateVideoArrayVideoBased)
+            return generateVideoArrayVideoBased(username, videoId, count);
+        }
+        else {
+            return generateVideoArray(username);
+        }
     });
 }
