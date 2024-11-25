@@ -45,20 +45,23 @@ const { title } = require('process');
 // All metadata is now in the database
 
 //Start up queue
+// const connection = new IORedis({
+//     maxRetriesPerRequest: null,
+//     host: process.env.REDIS_DOMAIN,
+//     port: process.env.REDIS_PORT,
+//     password: process.env.REDIS_PASSWORD
+// });
 const connection = new IORedis({
     maxRetriesPerRequest: null,
-    host: process.env.REDIS_DOMAIN,
-    port: process.env.REDIS_PORT,
-    password: process.env.REDIS_PASSWORD
+    password: process.env.REDISPASS
 });
-
 let videoQueue = new Queue('videoQueue', { connection });
 
 //Get redis connection
-const client = createClient({
-    url: process.env.REDIS_URL,
-    password: process.env.REDIS_PASSWORD
-});
+// const client = createClient({
+//     url: process.env.REDIS_URL,
+//     password: process.env.REDIS_PASSWORD
+// });
 
 const isAuth = (req, res, next) => {
     if (req.session.userId) {
@@ -89,14 +92,88 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 });
 
 //Body should contain {"id":"videoID", "value":"true/false/null"}
-router.post('/api/like', async (req, res) => {
+router.post('/api/like', isAuth, async (req, res) => {
+
+    let userPromise = UserModel.findOne({ username: req.session.userId }).exec()
+
+    if (!req.body.id) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
+    }
+
+    let videoPromise = VideoModel.findOne({ '_id': req.body.id }, 'metadata').exec()
+
+    if(req.body.value === undefined) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing like value' });
+    }
+    if(req.body.value !== true && req.body.value !== false && req.body.value !== null) {
+        return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid like value' });
+    }
+
+    // let user = await UserModel.findOne({ username: req.session.userId });
+    // if (!user) {
+    //     return res.json({ status: 'ERROR', error: true, message: 'User not found' });
+    // }
     
-    let request = {request: "like", id: req.body.id, value: req.body.value};
-    let redisClient = res.redis;
-    redisClient.publish(process.env.REDIS_CHANNEL, JSON.stringify(request));
+    // let video = await VideoModel.findOne({ '_id': req.body.id }, 'metadata');
+    // if (!video) {
+    //     return res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+    // }
+    
+    let existenceTest = await Promise.all([userPromise, videoPromise]).then((result) =>{
+        let user = result[0]
+        let video = result[1]
+        if (!user) {
+            res.json({ status: 'ERROR', error: true, message: 'User not found' });
+            return false
+        }
+        if (!video) {
+            res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+            return false
+        }
+        return [user,video]
+    })
 
-    res.status(200).json({ status: 'OK' });
+    if(!existenceTest){
+        return
+    }
+    let user = existenceTest[0]
+    let video = existenceTest[1]
+    //Check if the previous value matches the given value. If so, throw an error.
+    //POSSIBLE BUG: catch errors do not terminate
+    let rating = await RatingModel.findOne({ user: user._id, video: video._id });
+    if (!rating) {
+        rating = new RatingModel({
+            user: user._id,
+            video: video._id,
+            rating: req.body.value
+        })
 
+        try{
+            await rating.save()
+        }catch(err){
+            console.log(err)
+            return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+        }
+    }
+    else {
+        if (req.body.value !== null && rating.rating === req.body.value) {
+            return res.status(200).json({ status: 'ERROR', error: true, message: 'Rating is already given value' });
+        }
+        rating.rating = req.body.value;
+
+        try{
+            let result = await rating.save()
+        }catch(err){
+            console.log(err)
+            return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+        }
+        
+    }
+
+    //Get all current likes for the video
+    let totalRatings = await RatingModel.find({ video: video._id, rating: true });
+
+    return res.status(200).json({ status: 'OK', likes: totalRatings.length });
 });
 
 //Should call when video is first viewed by the user
