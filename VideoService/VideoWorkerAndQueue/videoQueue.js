@@ -7,7 +7,8 @@ const path = require('path');
 //Mongoose
 const mongoose = require('mongoose');
 require('dotenv').config();
-const mongoURI = process.env.MONGOURI;
+const mongoURI = process.env.MONGOURIREPL;
+
 mongoose.connect(mongoURI).then(() => console.log('Connected to MongoDB'));
 
 //Import models

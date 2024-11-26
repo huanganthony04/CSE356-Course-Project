@@ -3,11 +3,11 @@ const UserModel = require('../models/User.js');
 const VideoModel = require('../models/Video.js');
 const mongoose = require('mongoose');
 
+//Import disco-rec
 async function getRecommender() {
     const { Recommender } = await import('disco-rec');
     return Recommender;
 }
-
 let Recommender;
 getRecommender().then((rec) => {
     Recommender = rec;
@@ -15,8 +15,7 @@ getRecommender().then((rec) => {
 
 require('dotenv').config();
 
-const mongoURI = process.env.MONGOURI;
-
+const mongoURI = process.env.MONGOURIREPL;
 
 //Connect to the database
 mongoose.connect(mongoURI).catch((err) => {
@@ -106,10 +105,7 @@ const generateVideoArray = async (username) => {
     return array;
 }
 
-//For the video based recommendation system, items and users are swapped. This is because disco-rec offers a similarUsers method, so we use that to find similar items.
-
 //Build the rating matrix from all the users and their ratings on all the videos
-
 let userToIndex = new Map();
 let indexToUser = new Map();
 let availUserIndex = 0;
@@ -121,10 +117,10 @@ const updateFeedbackMatrix = async (username, videoId, likevalue) => {
 
     let score;
     if (likevalue) {
-        score = 1000;
+        score = 1;
     }
     else if (likevalue === false) {
-        score = -1000;
+        score = -1;
     }
     else {
         score = 0;
@@ -247,6 +243,8 @@ const generateVideoArrayVideoBased = async (username, itemId, count) => {
 
 }
 
+/*
+
 async function test(username, itemId, count) {
     console.log('test');
     await buildFeedbackMatrix();
@@ -261,6 +259,8 @@ try {
 catch (err) {
     console.log(err);
 }
+
+*/
 
 
 module.exports = { generateVideoArray, generateVideoArrayVideoBased, updateFeedbackMatrix };

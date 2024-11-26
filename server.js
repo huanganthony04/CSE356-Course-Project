@@ -4,7 +4,9 @@ const session = require("express-session");
 const cors = require('cors');
 
 require('dotenv').config();
-const mongoURI = process.env.MONGOURI;
+
+const mongoURI = process.env.MONGOURIREPL;
+console.log(mongoURI);
 
 const morgan = require('morgan');
 
@@ -17,37 +19,26 @@ const videoRoutes = require('./routes/videoRoutes');
 const app = express();
 const PORT = 8080;
 
-//Set up connection to Redis
-// const { createClient } = require('redis');
-// const client = createClient({
-//     url: process.env.REDIS_URL,
-//     password: process.env.REDIS_PASSWORD
-// });
-
-// client.on('connect', () => {
-//     console.log('Connected to Redis');
-// });
-
-// try {
-//     client.connect();
-// }
-// catch (err) {
-//     console.log(err);
-// }
-
-// app.use((req, res, next) => {
-//     res.redis = client;
-//     next();
-// });
-
+console.log('Starting server');
 
 //Set up connection to mongo client
-mongoose.connect(mongoURI)
-    .then(() => console.log('Connected to MongoDB'));
+mongoose.connect(mongoURI, { readPreference: 'primaryPreferred' })
+    .then(() => {
+        console.log('Connected to MongoDB');
+    })
+    .catch((err) => { 
+        console.log(err) 
+    });
 
-const store = new MongoDBSession({
-    uri: mongoURI,
-    collection: 'sessions'
+const store = new MongoDBSession(
+    {
+        uri: mongoURI,
+        collection: 'sessions',
+    }
+);
+
+store.on('error', (err) => {
+    console.log(err);
 });
 
 //Added for communication with frontend through axios
