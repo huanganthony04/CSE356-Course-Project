@@ -220,7 +220,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
     let userPromise = UserModel.findOne({ username: req.session.userId }).lean().exec();
     let videoPromise = VideoModel.findOne({ _id: videoId }, 'metadata').exec();
     let ratingPromise = RatingModel.find({ video: video._id }).exec();
-
+    let recommendationPromise = RecommendationModel.findOne({ user: user.username }).exec();
     if(!req.body.count) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
     }
@@ -234,7 +234,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
         console.log('test');
         //Old system used in infinite scroll.
         //Create a recommendation array for the user if it doesn't exist, or regenerate if continue is false
-        let recommendation = await RecommendationModel.findOne({ user: user.username });
+        let recommendation = await recommendationPromise
         if (!recommendation) {
             let videoArray = await generateVideoArray(user.username);
             recommendation = new RecommendationModel({
