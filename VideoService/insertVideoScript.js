@@ -34,7 +34,7 @@ const populate = async () => {
 
     let metadata = JSON.parse(fs.readFileSync(json_path, 'utf8'))
     //Iterate over the mp4 files
-    for(const video of videoFileArray){
+    for(let i = 0; i < 200; i++){
         let newuid;
         
 
@@ -52,27 +52,27 @@ const populate = async () => {
         let newvideo = new VideoModel({
             _id: newuid,
             metadata: {
-                title: video.name,
-                description: metadata[video.name],
+                title: "test-video",
+                description: "desc-filler",
                 author: "grading_script_above",
                 
             },
             status : 'complete'
         });
         //Insert into database
-        await newvideo.save().catch((err) => {
-            console.log("Error saving user: " + err);
-        });
+        // await newvideo.save().catch((err) => {
+        //     console.log("Error saving user: " + err);
+        // });
 
-        const inputPath = video.parentPath + '/' + video.name
+        // const inputPath = video.parentPath + '/' + video.name
         
         
-        let result = execSync(`sh ./VideoService/upload.sh ${inputPath} ${newuid}`)
-        videocount++
-        fs.appendFile('/root/cse356/Course-Project/uploads/oldvid.log', newuid + ',' + video.name + '\n', function (err) {
-            if (err) throw err;
-            console.log('Saved!');
-        });
+        // let result = execSync(`sh ./VideoService/upload.sh ${inputPath} ${newuid}`)
+        // videocount++
+        // fs.appendFile('/root/cse356/Course-Project/uploads/oldvid.log', newuid + ',' + video.name + '\n', function (err) {
+        //     if (err) throw err;
+        //     console.log('Saved!');
+        // });
         console.log("VIDEO" + videocount)
     }
 }

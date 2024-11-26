@@ -217,12 +217,15 @@ router.post('/api/view', isAuth, async (req, res) => {
 //If { continue: true }, continue using the current recommendation list and return { count } videos (use for infinite scrolling)
 //Otherwise regenerate the recommendation list for the current user and return { count } videos
 router.post('/api/videos', isAuth, async (req, res) => {
+    let userPromise = UserModel.findOne({ username: req.session.userId }).lean().exec();
+    let videoPromise = VideoModel.findOne({ _id: videoId }, 'metadata').exec();
+    let ratingPromise = RatingModel.find({ video: video._id }).exec();
 
     if(!req.body.count) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing count'});
     }
 
-    let user = await UserModel.findOne({ username: req.session.userId });
+    let user = await userPromise
     if (!user) {
         return res.json({ status: 'ERROR', error: true, message: 'User not found' });
     }
@@ -276,8 +279,8 @@ router.post('/api/videos', isAuth, async (req, res) => {
         let response = [];
 
         for (let videoId of videoArray) {
-            let video = await VideoModel.findOne({ _id: videoId }, 'metadata');
-            let totalRatings = await RatingModel.find({ video: video._id });
+            let video = await videoPromise;
+            let totalRatings = await ratingPromise;
             let views = totalRatings.length;
             let likes = totalRatings.filter((rating) => rating.rating === true).length;
             let watched = user.watchHistory.includes(video._id);
