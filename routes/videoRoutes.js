@@ -86,11 +86,13 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 
 //Body should contain {"id":"videoID", "value":"true/false/null"}
 router.post('/api/like', isAuth, async (req, res) => {
-    console.time(`request ${req.id}`)
-    console.time(`errorchecking ${req.id}`)
 
-    let userPromise = UserModel.findOne({ username: req.session.userId }).exec()
-    let videoPromise = VideoModel.findOne({ '_id': req.body.id }, 'metadata').exec()
+    // let userPromise = UserModel.findOne({ username: req.session.userId }).exec()
+    // let videoPromise = VideoModel.findOne({ '_id': req.body.id }, 'metadata').exec()
+    // let ratingPromise = RatingModel.findOne({ user: req.session.userId, video: req.body.id }).exec()
+
+    let userPromise = UserModel.countDocuments({ username: req.session.userId }).exec()
+    let videoPromise = VideoModel.countDocuments({ '_id': req.body.id }).exec()
     let ratingPromise = RatingModel.findOne({ user: req.session.userId, video: req.body.id }).exec()
 
     if (!req.body.id) {
@@ -117,25 +119,29 @@ router.post('/api/like', isAuth, async (req, res) => {
     let existenceTest = await Promise.all([userPromise, videoPromise]).then((result) =>{
         let user = result[0]
         let video = result[1]
-        if (!user) {
+        if (user != 1) {
             res.json({ status: 'ERROR', error: true, message: 'User not found' });
             return false
         }
-        if (!video) {
+        if (video != 1) {
             res.json({ status: 'ERROR', error: true, message: 'Video not found' });
             return false
         }
-        return [user,video]
+        // if (!user) {
+        //     res.json({ status: 'ERROR', error: true, message: 'User not found' });
+        //     return false
+        // }
+        // if (video != 1) {
+        //     res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+        //     return false
+        
+        return true
     })
     
     if(!existenceTest){
         return
     }
-    console.timeEnd(`errorchecking ${req.id}`)
-    console.time(`processing ${req.id}`)
 
-    let user = existenceTest[0]
-    let video = existenceTest[1]
     //Check if the previous value matches the given value. If so, throw an error.
     //POSSIBLE BUG: catch errors do not terminate
     let rating = await ratingPromise
@@ -161,7 +167,7 @@ router.post('/api/like', isAuth, async (req, res) => {
         rating.rating = req.body.value;
 
         try{
-            let result = await rating.save()
+            await rating.save().catch((err) => {console.log(error)})
         }catch(err){
             console.log(err)
             return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
@@ -169,13 +175,11 @@ router.post('/api/like', isAuth, async (req, res) => {
         
     }
 
-    console.timeEnd(`processing ${req.id}`)
 
     //Get all current likes for the video
-    let totalRatings = await RatingModel.find({ video: video._id, rating: true });
+    let totalRatings = await RatingModel.countDocuments({ video: req.body.id, rating: true });
 
-    res.status(200).json({ status: 'OK', likes: totalRatings.length });
-    console.timeEnd(`request ${req.id}`)
+    res.status(200).json({ status: 'OK', likes: totalRatings });
 
 });
 
