@@ -98,7 +98,6 @@ router.post('/api/like', isAuth, async (req, res) => {
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
-
     if(req.body.value === undefined) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing like value' });
     }
@@ -167,7 +166,7 @@ router.post('/api/like', isAuth, async (req, res) => {
         rating.rating = req.body.value;
 
         try{
-            await rating.save().catch((err) => {console.log(error)})
+            await rating.save().catch((err) => {console.log(err)})
         }catch(err){
             console.log(err)
             return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
@@ -265,9 +264,6 @@ router.post('/api/videos', isAuth, async (req, res) => {
         return res.status(200).json({ status: 'OK', videos: response });
     }
     else {
-
-        console.log("video with params: " + req.session.userId, req.body.videoId, req.body.count);
-
         //VideoID provided, use for video based recommendation
         let videoArray = await ultraFastRecs(user.username, req.body.videoId, req.body.count);
         let response = [];

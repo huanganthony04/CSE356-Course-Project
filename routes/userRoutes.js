@@ -120,38 +120,29 @@ router.post('/api/forceadduser', async (req, res) => {
 router.get('/api/verify', async (req, res) => {
     let { email, key } = req.query;
     email = decodeURIComponent(email);
-    console.log('Verifying ' + email, key);
     if (!email || !key) {
-        console.log("Missing required fields");
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing required fields' });
     }
     let user = await UserModel.findOne({ email });
     if (!user) {
-        console.log("User with email does not exist");
         return res.status(200).json({ status: 'ERROR', error: true, message: 'User with email does not exist' });
     }
     if (user.verified) {
-        console.log("User is already verified");
         return res.status(200).json({ status: 'ERROR', error: true, message: 'User is already verified' });
     }
     if (key !== user.verificationKey) {
-        console.log("Invalid verification key");
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid verification key' });
     }
     user.verified = true;
 
     await user.save().catch((err) => {
-            console.log("Error verifying user: " + err);
             return res.status(200).json({ status: 'ERROR', error: true, message: 'Error verifying user' });
     });
-    
-    console.log("User verified successfully");
     return res.status(200).json({ status: 'OK' });
 });
 
 router.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    console.log( req.body );
     if (!username || !password) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing required fields' });
     }

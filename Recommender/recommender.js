@@ -15,13 +15,6 @@ getRecommender().then((rec) => {
 
 require('dotenv').config();
 
-const mongoURI = process.env.MONGOURIREPL;
-
-//Connect to the database
-mongoose.connect(mongoURI).catch((err) => {
-    console.log('Could not connect to DB: ' + err);
-});
-
 //Build the rating matrix from all the users and their ratings on all the videos
 const buildFeedbackArray = async () => {
 
@@ -297,8 +290,6 @@ const generateVideoArrayVideoBased = async (username, itemId, count) => {
 //This is 10x faster than generateVideoArrayVideoBased with 700 rating documents
 const ultraFastRecs = async (username, videoId, count) => {
 
-    console.log('Generating video array for ' + username + ' with item ' + videoId + ' and count ' + count);
-
     let user = await UserModel.findOne({ username: username });
     let watchedVids = user.watchHistory;
     let watchedSet = new Set(watchedVids);
@@ -354,6 +345,14 @@ const ultraFastRecs = async (username, videoId, count) => {
 
 /*
 async function test(username, itemId, count) {
+
+    const mongoURI = process.env.MONGOURIREPL;
+
+    //Connect to the database
+    mongoose.connect(mongoURI).catch((err) => {
+        console.log('Could not connect to DB: ' + err);
+    });
+
     console.log('test');
 
     const start1 = performance.now();
