@@ -22,7 +22,7 @@ const PORT = 8080;
 console.log('Starting server');
 
 //Set up connection to mongo client
-mongoose.connect(mongoURI, { readPreference: 'primaryPreferred' })
+mongoose.connect(mongoURI, { maxPoolSize: 400, readPreference: 'primaryPreferred' })
     .then(() => {
         console.log('Connected to MongoDB');
     })
