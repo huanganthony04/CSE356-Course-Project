@@ -27,7 +27,8 @@ mongoose.connect(mongoURI, { readPreference: 'primaryPreferred' })
         console.log('Connected to MongoDB');
     })
     .catch((err) => { 
-        console.log(err) 
+        console.log(err);
+        process.exit(1);
     });
 
 const store = new MongoDBSession(
@@ -39,6 +40,7 @@ const store = new MongoDBSession(
 
 store.on('error', (err) => {
     console.log(err);
+    process.exit(1);
 });
 
 //Added for communication with frontend through axios

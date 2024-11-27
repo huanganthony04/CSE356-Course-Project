@@ -35,7 +35,7 @@ const RatingModel = require('../models/Rating');
 const RecommendationModel = require('../models/Recommendation');
 
 //Import recommender
-const { generateVideoArray, generateVideoArrayVideoBased, updateFeedbackMatrix } = require('../Recommender/recommender');
+const { generateVideoArray, getFastRecs } = require('../Recommender/recommender');
 const { title } = require('process');
 
 //Import video metadata
@@ -179,9 +179,6 @@ router.post('/api/like', isAuth, async (req, res) => {
     //Get all current likes for the video
     let totalRatings = await RatingModel.countDocuments({ video: req.body.id, rating: true });
 
-    //Update the feedback matrix
-    updateFeedbackMatrix(req.session.userId, req.body.id, req.body.value);
-
     res.status(200).json({ status: 'OK', likes: totalRatings });
 
 });
@@ -272,7 +269,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
         console.log("video with params: " + req.session.userId, req.body.videoId, req.body.count);
 
         //VideoID provided, use for video based recommendation
-        let videoArray = await generateVideoArrayVideoBased(user.username, req.body.videoId, req.body.count);
+        let videoArray = await getFastRecs(user.username, req.body.videoId, req.body.count);
         let response = [];
 
         for (let videoId of videoArray) {
@@ -283,7 +280,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
             let watched = user.watchHistory.includes(video._id);
             response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
         }
-        console.log(response);
+
         return res.status(200).json({ status: 'OK', videos: response });
     }
 
