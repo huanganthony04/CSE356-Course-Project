@@ -269,8 +269,10 @@ router.post('/api/videos', isAuth, async (req, res) => {
         let response = [];
 
         for (let videoId of videoArray) {
-            let video = await VideoModel.findOne({ _id: videoId }, 'metadata');
-            let totalRatings = await RatingModel.find({ video: video._id });
+            let [ video, totalRatings ] = await Promise.all([
+                VideoModel.findOne({ _id: videoId }, 'metadata'),
+                RatingModel.find({ video: videoId })
+            ]);
             let views = totalRatings.length;
             let likes = totalRatings.filter((rating) => rating.rating === true).length;
             let watched = user.watchHistory.includes(video._id);
