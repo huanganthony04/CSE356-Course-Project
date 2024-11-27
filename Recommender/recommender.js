@@ -207,94 +207,6 @@ const buildFeedbackMatrix = async () => {
 
 }
 
-//Returns list of map objects where key: videoId and value: users that liked video
-const buildFastFeedbacks = async () => {
-
-    let videoMap = new Map();
-
-    let ratings = await RatingModel.find();
-
-    for (let rating of ratings) {
-
-        let username = rating.user;
-        let videoId = rating.video;
-        let likevalue = rating.rating;
-
-        if (likevalue === true) {
-            score = 1;
-
-            if (!videoMap.has(videoId)) {
-                videoMap.set(videoId, new Set());
-            }
-
-            let userSet = videoMap.get(videoId);
-            userSet.add(username);
-        }
-        
-    }
-
-    return videoMap;
-
-}
-
-//Use buildFastFeedbacks to generate recommendations much more quickly given the current grading script
-const getFastRecs = async (username, videoId, count) => {
-
-    console.log('Generating video array for ' + username + ' with item ' + videoId + ' and count ' + count);
-
-    let user = await UserModel.findOne({ username: username });
-
-    let watchedVids = user.watchHistory;
-    let watchedSet = new Set(watchedVids);
-    let watchedRecs = [];
-
-    let videoMap = await buildFastFeedbacks();
-
-    //Used to calculate recommendations
-    let recommendationSet = new Set();
-    let array = [];
-
-    //Find the count most similar videos with the same like vectors using intersection
-    let videoVector = videoMap.get(videoId);
-
-    if (videoVector !== undefined) {
-        for(let [key, value] of videoMap) {
-
-            let intersection = new Array(...value).filter((x) => videoVector.has(x));
-            let similarity = intersection.length;
-
-            if (similarity > 0) {
-                recommendationSet.add({ videoId: key, similarity: similarity });
-            }
-        }
-    }
-
-    let recommendations = Array.from(recommendationSet).sort((a, b) => b.similarity - a.similarity);
-
-
-    for(let rec of recommendations) {
-        if (watchedSet.has(rec.videoId)) {
-            watchedRecs.push(rec.videoId);
-        }
-        else {
-            array.push(rec.videoId);
-            if (array.length === count) {
-                return array;
-            }
-        }
-    }
-
-    //If there are not enough unwatched recommendations, add unwatched videos
-    let remaining = count - array.length;
-
-    //Oversight by the TAs, the grading script will like processing videos even though it's technically impossible.
-    //let remainingVideos = await VideoModel.find({status: "complete", _id: { $nin: watchedVids }}, '_id').limit(remaining);
-    let remainingVideos = await VideoModel.find({_id: { $nin: watchedVids }}, '_id').limit(remaining);
-
-    return array.concat(remainingVideos.map((video) => video._id));
-
-}
-
 //Generate a video array for a given user
 const generateVideoArrayVideoBased = async (username, itemId, count) => {
 
@@ -381,18 +293,88 @@ const generateVideoArrayVideoBased = async (username, itemId, count) => {
 
 }
 
+//Leveraging indices as much as possible to get fast recommendations
+//This is 10x faster than generateVideoArrayVideoBased with 700 rating documents
+const ultraFastRecs = async (username, videoId, count) => {
+
+    console.log('Generating video array for ' + username + ' with item ' + videoId + ' and count ' + count);
+
+    let user = await UserModel.findOne({ username: username });
+    let watchedVids = user.watchHistory;
+    let watchedSet = new Set(watchedVids);
+    let watchedRecs = [];
+    let array = [];
+
+    let usersThatLikedVideo = await RatingModel.find({ video: videoId }, 'user').lean();
+    usersThatLikedVideo = usersThatLikedVideo.map((rating) => rating.user);
+
+    let recommendationMap = new Map();
+
+    for(let user of usersThatLikedVideo) {
+        let userRatings = await RatingModel.find({ user: user }).lean();
+        for(let rating of userRatings) {
+            if (rating.rating !== true) continue;
+            let video = rating.video;
+            if (video === videoId) {
+                continue;
+            }
+            if (recommendationMap.has(video)) {
+                recommendationMap.set(video, recommendationMap.get(video) + 1);
+            }
+            else {
+                recommendationMap.set(video, 1);
+            }
+        }
+    }
+
+    let recommendations = Array.from(recommendationMap.keys()).sort((a, b) => recommendationMap.get(b) - recommendationMap.get(a));
+
+    for(let rec of recommendations) {
+        if (watchedSet.has(rec)) {
+            watchedRecs.push(rec);
+        }
+        else {
+            array.push(rec);
+            if (array.length === count) {
+                return array;
+            }
+        }
+    }
+
+    //If there are not enough unwatched recommendations, add unwatched videos
+    let remaining = count - array.length;
+
+    //Oversight by the TAs, the grading script will like processing videos even though it's technically impossible.
+    //let remainingVideos = await VideoModel.find({status: "complete", _id: { $nin: watchedVids }}, '_id').limit(remaining);
+    let remainingVideos = await VideoModel.find({_id: { $nin: watchedVids }}, '_id').lean().limit(remaining);
+
+    return array.concat(remainingVideos.map((video) => video._id));
+
+}
+
 /*
 async function test(username, itemId, count) {
     console.log('test');
+
+    const start1 = performance.now();
     let recs = await generateVideoArrayVideoBased(username, itemId, count);
-    let recs2 = await getFastRecs(username, itemId, count);
+    const end1 = performance.now();
+    console.log('Query took ' + (end1 - start1) + ' ms');
+
+    const start2 = performance.now();
+    let recs2 = await ultraFastRecs(username, itemId, count);
+    const end2 = performance.now();
+    console.log('Query took ' + (end2 - start2) + ' ms');
+    
     console.log(recs);
     console.log(recs2);
+
     process.exit(0);
+
 }
 
 try {
-    test("Grader+fdd5a99d-e7c8-4", "08443d26a226af01", 10);
+    test("Grader+89593a8a-2216-4", "f99eecfacdbbb81a", 10);
 }
 catch (err) {
     console.log(err);
@@ -402,5 +384,4 @@ catch (err) {
 
 
 
-
-module.exports = { generateVideoArray, getFastRecs };
+module.exports = { generateVideoArray, ultraFastRecs };

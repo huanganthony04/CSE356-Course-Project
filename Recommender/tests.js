@@ -1,13 +1,31 @@
 require('dotenv').config();
 
-const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 const UserModel = require('../models/User');
 const RatingModel = require('../models/Rating');
 const RecommendationModel = require('../models/Recommendation');
 
+
+const mongoose = require('mongoose');
 mongoose.connect(process.env.MONGOURI)
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.log('Could not connect to MongoDB: ' + err));
+
+mongoose.set('debug', true);
+
+
+const client = new MongoClient(process.env.MONGOURI);
+
+async function connect() {
+    try {
+        await client.connect();
+        console.log('Connected to MongoDB');
+        return client.db();
+    }
+    catch (err) {
+        console.log('Could not connect to MongoDB: ' + err);
+    }
+}
 
 async function likeTable() {
     let ratings = await RatingModel.find();
@@ -64,8 +82,28 @@ async function likeTable() {
     console.table(likeTable);
 }
 
+async function queryTest() {
+    const db = await connect();
+    const collection = db.collection('ratings');
+    const start = performance.now();
+    let results = await collection.find({ rating: true }).toArray();
+    const end = performance.now();
+
+    console.log(`Query took ${end - start} ms`);
+}
+
+async function queryTestMongoose() {
+    const start = performance.now();
+    let results = await RatingModel.find({ user: 'Grader+89593a8a-2216-4' });
+    console.log(results);
+    const end = performance.now();
+
+    console.log(`Query took ${end - start} ms`);
+}
+
 async function test() {
-    await likeTable();
+    await queryTest();
+    await queryTestMongoose();
 }
 
 async function main() {

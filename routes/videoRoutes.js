@@ -35,7 +35,7 @@ const RatingModel = require('../models/Rating');
 const RecommendationModel = require('../models/Recommendation');
 
 //Import recommender
-const { generateVideoArray, getFastRecs } = require('../Recommender/recommender');
+const { generateVideoArray, ultraFastRecs } = require('../Recommender/recommender');
 const { title } = require('process');
 
 //Import video metadata
@@ -269,7 +269,7 @@ router.post('/api/videos', isAuth, async (req, res) => {
         console.log("video with params: " + req.session.userId, req.body.videoId, req.body.count);
 
         //VideoID provided, use for video based recommendation
-        let videoArray = await getFastRecs(user.username, req.body.videoId, req.body.count);
+        let videoArray = await ultraFastRecs(user.username, req.body.videoId, req.body.count);
         let response = [];
 
         for (let videoId of videoArray) {
