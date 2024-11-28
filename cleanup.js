@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const UserModel = require('./models/User');
 const RatingModel = require('./models/Rating');
 const RecommendationModel = require('./models/Recommendation');
+const VideoModel = require('./models/Video');
 const connection = new IORedis({
     maxRetriesPerRequest: null,
     password: process.env.REDIS_PASSWORD
@@ -23,6 +24,8 @@ async function cleanup() {
     await UserModel.collection.drop();
     await RatingModel.collection.drop();
     await RecommendationModel.collection.drop();
+    await VideoModel.collection.updateMany({}, { $set: { "metadata.likes":0, "metadata.views": 0 } });
+    await VideoModel.collection.deleteMany({ "status": "processing" });
 }
 
 try {
