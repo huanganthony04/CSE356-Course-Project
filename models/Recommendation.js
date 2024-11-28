@@ -18,4 +18,5 @@ const RecommendationSchema = new Schema({
     }
 })
 
+RecommendationSchema.set('autoIndex', false);
 module.exports = mongoose.model('Recommendation', RecommendationSchema);

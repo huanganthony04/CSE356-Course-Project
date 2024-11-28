@@ -25,4 +25,5 @@ const VideosSchema = new Schema({
     }
 });
 
+VideosSchema.set('autoIndex', false);
 module.exports = mongoose.model('Video', VideosSchema);

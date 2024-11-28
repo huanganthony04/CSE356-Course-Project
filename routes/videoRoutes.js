@@ -24,6 +24,12 @@ require('dotenv').config();
 // const upload = multer({ storage: storage })
 const busboy = require('busboy')
 
+//Import models
+const UserModel = require('../models/User');
+const VideoModel = require('../models/Video');
+const RatingModel = require('../models/Rating');
+const RecommendationModel = require('../models/Recommendation');
+
 
 //Having issues installing hashlib, disabling for now
 //const hashlib = require('hashlib');

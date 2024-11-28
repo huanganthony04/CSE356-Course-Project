@@ -25,4 +25,5 @@ const UsersSchema = new Schema({
     }
 });
 
+UsersSchema.set('autoIndex', false);
 module.exports = mongoose.model('Users', UsersSchema);

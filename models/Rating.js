@@ -17,4 +17,5 @@ const RatingSchema = new mongoose.Schema({
     }
 })
 
+RatingSchema.set('autoIndex', false);
 module.exports = mongoose.model('Rating', RatingSchema);

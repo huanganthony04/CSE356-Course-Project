@@ -30,21 +30,6 @@ console.log('Starting server');
 mongoose.connect(mongoURI, { maxPoolSize: 200 })
     .then(() => {
         console.log('Connected to MongoDB');
-
-        Promise.all([
-            UserModel.syncIndexes(),
-            VideoModel.syncIndexes(),
-            RatingModel.syncIndexes(),
-            RecommendationModel.syncIndexes(),
-        ])
-        .then(() => {
-            console.log('Indexes synced');
-            mongoose.set('autoIndex', false);
-        })
-        .catch((err) => {
-            console.log(err);
-            process.exit(1);
-        });
     })
     .catch((err) => { 
         console.log(err);
