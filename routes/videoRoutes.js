@@ -179,14 +179,22 @@ router.post('/api/view', isAuth, async (req, res) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
 
-    let user = await UserModel.findOne({ username: req.session.userId });
-    if (!user) {
-        return res.json({ status: 'ERROR', error: true, message: 'User not found' });
-    }
-    let video = await VideoModel.findOne({ '_id': req.body.id }, 'metadata');
-    if (!video) {
-        res.json({ status: 'ERROR', error: true, message: 'Video not found' });
-    }
+    let [ user, video ] = await Promise.all([
+        UserModel.findOne({ username: req.session.userId })
+            .then((user) => {
+                if (!user) {
+                    return res.json({ status: 'ERROR', error: true, message: 'User not found' });
+                }
+                return user;
+            }),
+        VideoModel.findOne({ _id: req.body.id })
+            .then((video) => {
+                if (!video) {
+                    return res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+                }
+                return video;
+            })
+    ]);
 
     //Check if the user has already viewed the video
     if (user.watchHistory.includes(video._id)) {
@@ -195,12 +203,17 @@ router.post('/api/view', isAuth, async (req, res) => {
 
     //Add view to the video
     user.watchHistory.push(video._id);
+    video.metadata.views = video.metadata.views + 1;
 
-    await user.save().catch((err) => {
-        return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving view: ${err}` });
-    });
+    res.status(200).json({ status: 'OK', viewed: false });
 
-    return res.status(200).json({ status: 'OK', viewed: false });
+    try {
+        user.save();
+        video.save();
+    }
+    catch(err) {
+        return console.log(err);
+    }
 });
 
 //If { continue: true }, continue using the current recommendation list and return { count } videos (use for infinite scrolling)
@@ -243,11 +256,8 @@ router.post('/api/videos', isAuth, async (req, res) => {
 
         for(let i = 0; i < req.body.count; i++) {
             let video = await VideoModel.findOne({ _id: videos[i] }, 'metadata');
-            let totalRatings = await RatingModel.find({ video: video._id });
-            let views = totalRatings.length;
-            let likes = totalRatings.filter((rating) => rating.rating === true).length;
             let watched = user.watchHistory.includes(video._id);
-            response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
+            response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: video.metadata.likes, views: video.metadata.views });
         }
 
         console.log(response);
@@ -259,14 +269,9 @@ router.post('/api/videos', isAuth, async (req, res) => {
         let response = [];
 
         for (let videoId of videoArray) {
-            let [ video, totalRatings ] = await Promise.all([
-                VideoModel.findOne({ _id: videoId }, 'metadata'),
-                RatingModel.find({ video: videoId })
-            ]);
-            let views = totalRatings.length;
-            let likes = totalRatings.filter((rating) => rating.rating === true).length;
+            let video = await VideoModel.findOne({ _id: videoId }, 'metadata');
             let watched = user.watchHistory.includes(video._id);
-            response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: likes, views: views });
+            response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: video.metadata.likes, views: video.metadata.views });
         }
 
         return res.status(200).json({ status: 'OK', videos: response });
