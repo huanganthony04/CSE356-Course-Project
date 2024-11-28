@@ -8,12 +8,17 @@ const metadataSchema = new Schema({
     description: {
         type: String,
     },
-    author:{
+    author: {
         //Use the username of the user
         type: String,
         required: true,
+    },
+    likes: {
+        type: Number,
+        default: 0
     }
-}, { toJSON: { virtuals: true } }) ;
+});
+metadataSchema.set('autoIndex', false);
 
 const VideosSchema = new Schema({
     _id: String,

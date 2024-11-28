@@ -82,19 +82,9 @@ async function likeTable() {
     console.table(likeTable);
 }
 
-async function queryTest() {
-    const db = await connect();
-    const collection = db.collection('ratings');
-    const start = performance.now();
-    let results = await collection.find({ rating: true }).toArray();
-    const end = performance.now();
-
-    console.log(`Query took ${end - start} ms`);
-}
-
 async function queryTestMongoose() {
     const start = performance.now();
-    let results = await RatingModel.find({ user: 'Grader+89593a8a-2216-4' });
+    let results = await RatingModel.find({ video: '55bb48c733b85e01' });
     console.log(results);
     const end = performance.now();
 
@@ -102,7 +92,6 @@ async function queryTestMongoose() {
 }
 
 async function test() {
-    await queryTest();
     await queryTestMongoose();
 }
 

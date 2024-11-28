@@ -87,14 +87,6 @@ router.get('/api/thumbnail/:id', isAuth, (req, res) => {
 //Body should contain {"id":"videoID", "value":"true/false/null"}
 router.post('/api/like', isAuth, async (req, res) => {
 
-    // let userPromise = UserModel.findOne({ username: req.session.userId }).exec()
-    // let videoPromise = VideoModel.findOne({ '_id': req.body.id }, 'metadata').exec()
-    // let ratingPromise = RatingModel.findOne({ user: req.session.userId, video: req.body.id }).exec()
-
-    let userPromise = UserModel.countDocuments({ username: req.session.userId }).exec()
-    let videoPromise = VideoModel.countDocuments({ '_id': req.body.id }).exec()
-    let ratingPromise = RatingModel.findOne({ user: req.session.userId, video: req.body.id }).exec()
-
     if (!req.body.id) {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video id' });
     }
@@ -105,81 +97,79 @@ router.post('/api/like', isAuth, async (req, res) => {
         return res.status(200).json({ status: 'ERROR', error: true, message: 'Invalid like value' });
     }
 
-    // let user = await UserModel.findOne({ username: req.session.userId });
-    // if (!user) {
-    //     return res.json({ status: 'ERROR', error: true, message: 'User not found' });
-    // }
-    
-    // let video = await VideoModel.findOne({ '_id': req.body.id }, 'metadata');
-    // if (!video) {
-    //     return res.json({ status: 'ERROR', error: true, message: 'Video not found' });
-    // }
-    
-    let existenceTest = await Promise.all([userPromise, videoPromise]).then((result) =>{
-        let user = result[0]
-        let video = result[1]
-        if (user != 1) {
-            res.json({ status: 'ERROR', error: true, message: 'User not found' });
-            return false
-        }
-        if (video != 1) {
-            res.json({ status: 'ERROR', error: true, message: 'Video not found' });
-            return false
-        }
-        // if (!user) {
-        //     res.json({ status: 'ERROR', error: true, message: 'User not found' });
-        //     return false
-        // }
-        // if (video != 1) {
-        //     res.json({ status: 'ERROR', error: true, message: 'Video not found' });
-        //     return false
-        
-        return true
-    })
-    
-    if(!existenceTest){
-        return
-    }
-
-    //Check if the previous value matches the given value. If so, throw an error.
-    //POSSIBLE BUG: catch errors do not terminate
-    let rating = await ratingPromise
+    let [ user, video, rating ] = await Promise.all([
+        UserModel.findOne({ username: req.session.userId })
+            .then((user) => {
+                if (!user) {
+                    return res.json({ status: 'ERROR', error: true, message: 'User not found' });
+                }
+                return user;
+            }),
+        VideoModel.findOne({ _id: req.body.id }, 'metadata')
+            .then((video) => {
+                if (!video) {
+                    return res.json({ status: 'ERROR', error: true, message: 'Video not found' });
+                }
+                return video;
+            }),
+        RatingModel.findOne({ user: req.session.userId, video: req.body.id })
+    ]);
 
     if (!rating) {
+
         rating = new RatingModel({
             user: req.session.userId,
             video: req.body.id,
             rating: req.body.value
-        })
+        });
 
-        try{
-            await rating.save()
-        }catch(err){
-            console.log(err)
-            return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+        if (req.body.value === true) {
+            video.metadata.likes = video.metadata.likes + 1;
+            res.send({status: 'OK', likes: video.metadata.likes});
+            try {
+                video.save();
+            }
+            catch (err) {
+                return console.log(err);
+            }
+        }
+        
+        try {
+            rating.save();
+        }
+        catch (err) {
+            return console.log(err);
         }
     }
+
     else {
+
         if (req.body.value !== null && rating.rating === req.body.value) {
             return res.status(200).json({ status: 'ERROR', error: true, message: 'Rating is already given value' });
         }
+
+        let prevRating = rating.rating;
         rating.rating = req.body.value;
 
-        try{
-            await rating.save().catch((err) => {console.log(err)})
-        }catch(err){
-            console.log(err)
-            return res.status(200).json({ status: 'ERROR', error: true, message: `Error saving like: ${err}` });
+        //We know the rating changed from not true -> true, so we add a like
+        if (req.body.value === true) {
+            video.metadata.likes = video.metadata.likes + 1;
         }
-        
+        //We know the rating changed from true -> not true, so we remove a like
+        else if (prevRating === true) {
+            video.metadata.likes = video.metadata.likes - 1;
+        }
+
+        res.send({status: 'OK', likes: video.metadata.likes});
+
+        try {
+            video.save();
+            rating.save();
+        }
+        catch (err) {
+            return console.log(err);
+        }
     }
-
-
-    //Get all current likes for the video
-    let totalRatings = await RatingModel.countDocuments({ video: req.body.id, rating: true });
-
-    res.status(200).json({ status: 'OK', likes: totalRatings });
-
 });
 
 //Should call when video is first viewed by the user
