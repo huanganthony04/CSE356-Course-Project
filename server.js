@@ -51,7 +51,7 @@ app.use(
     })
 );
 
-mongoose.set('autoIndex', false);
+app.use(morgan('dev'));
 
 
 app.use(session({
