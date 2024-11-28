@@ -123,6 +123,8 @@ router.post('/api/like', isAuth, async (req, res) => {
             rating: req.body.value
         });
 
+        await rating.save();
+
         if (req.body.value === true) {
             video.metadata.likes = video.metadata.likes + 1;
             res.send({status: 'OK', likes: video.metadata.likes});
@@ -132,13 +134,6 @@ router.post('/api/like', isAuth, async (req, res) => {
             catch (err) {
                 return console.log(err);
             }
-        }
-        
-        try {
-            rating.save();
-        }
-        catch (err) {
-            return console.log(err);
         }
     }
 
@@ -150,6 +145,8 @@ router.post('/api/like', isAuth, async (req, res) => {
 
         let prevRating = rating.rating;
         rating.rating = req.body.value;
+
+        await rating.save();
 
         //We know the rating changed from not true -> true, so we add a like
         if (req.body.value === true) {
@@ -164,7 +161,6 @@ router.post('/api/like', isAuth, async (req, res) => {
 
         try {
             video.save();
-            rating.save();
         }
         catch (err) {
             return console.log(err);
