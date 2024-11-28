@@ -28,12 +28,6 @@ const busboy = require('busboy')
 //Having issues installing hashlib, disabling for now
 //const hashlib = require('hashlib');
 
-//Import models
-const UserModel = require('../models/User');
-const VideoModel = require('../models/Video');
-const RatingModel = require('../models/Rating');
-const RecommendationModel = require('../models/Recommendation');
-
 //Import recommender
 const { generateVideoArray, ultraFastRecs } = require('../Recommender/recommender');
 const { title } = require('process');

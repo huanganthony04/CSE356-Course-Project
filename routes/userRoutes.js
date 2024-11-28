@@ -1,7 +1,6 @@
 const express = require('express');
 const session = require("express-session");
 const bcrypt = require('bcrypt');
-const UserModel = require('../models/User');
 const nodemailer = require('nodemailer');
 
 const router = express.Router();
