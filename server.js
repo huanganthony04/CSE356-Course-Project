@@ -5,7 +5,7 @@ const cors = require('cors');
 
 require('dotenv').config();
 
-const mongoURI = process.env.MONGOURIREPL;
+const mongoURI = process.env.MONGOURI;
 console.log(mongoURI);
 
 const morgan = require('morgan');

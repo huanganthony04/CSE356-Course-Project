@@ -1,7 +1,6 @@
 const RatingModel = require('../models/Rating.js');
 const UserModel = require('../models/User.js');
 const VideoModel = require('../models/Video.js');
-const mongoose = require('mongoose');
 
 //Import disco-rec
 async function getRecommender() {
