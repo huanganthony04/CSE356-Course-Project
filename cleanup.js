@@ -12,7 +12,7 @@ const connection = new IORedis({
     password: process.env.REDIS_PASSWORD
 });
 
-mongoose.connect(process.env.MONGOURIREPL)
+mongoose.connect(process.env.MONGOURI)
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.log('Could not connect to MongoDB: ' + err));
 
