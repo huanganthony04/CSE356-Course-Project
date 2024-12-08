@@ -145,3 +145,4 @@ nohup.out
 /uploads
 /tmp
 /backup-database
+mongodb_shards/keyfile.txt
