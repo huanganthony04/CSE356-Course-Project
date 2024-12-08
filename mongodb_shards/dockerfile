@@ -1,0 +1,9 @@
+FROM mongo
+
+
+COPY keyfile.txt /
+RUN chmod 400 /keyfile.txt
+RUN chown 999:999 /keyfile.txt
+CMD ["--keyFile", "/keyfile.txt", "--replSet", "shardrepl1","--bind_ip_all" ]
+VOLUME [ "/data" ]
+EXPOSE 27017:27017
