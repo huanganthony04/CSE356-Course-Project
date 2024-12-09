@@ -1,9 +1,12 @@
-FROM mongo
+FROM mongodb/mongodb-community-server
 
-
+USER root
 COPY keyfile.txt /
+COPY mongod.conf /etc
+#RUN chown mongodb:mongodb /keyfile.txt
 RUN chmod 400 /keyfile.txt
-RUN chown 999:999 /keyfile.txt
-CMD ["--keyFile", "/keyfile.txt", "--shardsvr","--replSet", "shardrepl1" ]
+RUN chown mongodb:mongodb /keyfile.txt
+USER mongodb
 VOLUME [ "/data" ]
-EXPOSE 27018:27018
+CMD ["--config", "/etc/mongod.conf" ]
+EXPOSE 27017:27017
