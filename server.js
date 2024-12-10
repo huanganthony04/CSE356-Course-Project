@@ -56,7 +56,7 @@ app.use(
     })
 );
 
-//app.use(morgan('dev'));
+app.use(morgan('dev'));
 
 app.use(session({
     secret: process.env.SESSION_SECRET,
