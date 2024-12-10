@@ -3,14 +3,21 @@ const IORedis = require('ioredis')
 const {spawn,spawnSync, exec,execSync} = require("child_process")
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config()
 
 //Mongoose
 const mongoose = require('mongoose');
 require('dotenv').config({path: '../../.env'});
 const mongoURI = process.env.MONGOURI;
 
-mongoose.connect(mongoURI).then(() => console.log('Connected to MongoDB'));
-
+mongoose.connect(mongoURI, { maxPoolSize: 600 })
+    .then(() => {
+        console.log('Connected to MongoDB');
+    })
+    .catch((err) => { 
+        console.log(err);
+        process.exit(1);
+    });
 //Import models
 const VideoModel = require('../../models/Video');
 
@@ -28,7 +35,8 @@ videoWorker.on('completed', async (job) => {
     console.log(`${job.id} has completed!`);
 
     let newuid = job.data.uid
-    fs.appendFile('/root/cse356/Course-Project/uploads/newvids.log', newuid + '\n', function (err) {
+    let test = path.join(__dirname);
+    fs.appendFile('/root/CSE356-Course-Project/uploads/newvids.log', newuid + '\n', function (err) {
         if (err) throw err;
         console.log('Saved!');
     });
