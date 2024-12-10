@@ -275,8 +275,6 @@ router.post('/api/videos', isAuth, async (req, res) => {
             let watched = user.watchHistory.includes(video._id);
             response.push({id: video._id, description: video.metadata.description, title: video.metadata.title,  watched: watched, likes: video.metadata.likes, views: video.metadata.views });
         }
-
-        console.log(response);
         return res.status(200).json({ status: 'OK', videos: response });
     }
     else {
