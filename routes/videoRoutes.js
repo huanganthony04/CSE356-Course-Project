@@ -54,6 +54,26 @@ const connection = new IORedis({
     maxRetriesPerRequest: null,
     password: process.env.REDIS_PASSWORD
 });
+
+connection.on('error', error => {
+if (error.code === 'ECONNRESET') {
+    console.log('Connection to Redis Session Store timed out.');
+} else if (error.code === 'ECONNREFUSED') {
+    console.log('Connection to Redis Session Store refused!');
+} else console.log(error);
+});
+
+// Listen to 'reconnecting' event to Redis
+connection.on('reconnecting', err => {
+if (connection.status === 'reconnecting')
+    console.log('Reconnecting to Redis Session Store...');
+else console.log('Error reconnecting to Redis Session Store.');
+});
+
+// Listen to the 'connect' event to Redis
+connection.on('connect', err => {
+if (!err) console.log('Connected to Redis Session Store!');
+});
 let videoQueue = new Queue('videoQueue', { connection });
 
 const isAuth = (req, res, next) => {
@@ -307,6 +327,10 @@ router.post('/api/upload' ,async (req,res) => {
         
     })
     bb.on('finish', function() {
+
+        if(fileExists == false){
+            return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing video'});
+        }
         if(fieldCount == 3){
 
             if(reqBody.author == '') {
@@ -332,6 +356,7 @@ router.post('/api/upload' ,async (req,res) => {
         let insert_result = newvideo.save().catch((err) => {
             console.log("Error saving user: " + err);
         });
+        console.log(tempPathFile)
         videoQueue.add('processVideo', { mp4File : tempPathFile, uid : newuid},{ removeOnComplete: true, removeOnFail: true })
 
     });
