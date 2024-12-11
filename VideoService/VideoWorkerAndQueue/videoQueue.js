@@ -34,7 +34,7 @@ const connection = new IORedis({
     password: process.env.REDIS_PASSWORD
 });
 
-const videoWorker = new Worker('videoQueue', videoWorkerFile, {connection, concurrency: 2});
+const videoWorker = new Worker('videoQueue', videoWorkerFile, {connection, concurrency: 1});
 
 videoWorker.on('completed', async (job) => {
     //console.log(`${job.id} has completed!`);
