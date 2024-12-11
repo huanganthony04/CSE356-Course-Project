@@ -310,7 +310,7 @@ router.post('/api/upload' ,async (req,res) => {
     }
     //console.log(newuid)
     let newfilename = 'processing-' + newuid + '.mp4'
-    let tempPathFile = path.join(__dirname,'..', 'tmp',newfilename);
+    let tempPathFile = path.join(__dirname,'..', 'tmp','new',newfilename);
 
     let reqBody = {}
     let fieldCount = 0

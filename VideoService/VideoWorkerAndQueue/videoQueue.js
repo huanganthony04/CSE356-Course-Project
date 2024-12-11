@@ -3,8 +3,13 @@ const IORedis = require('ioredis')
 const {spawn,spawnSync, exec,execSync} = require("child_process")
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios')
+
 require('dotenv').config()
 
+const videoStore = 'http://130.245.168.185/upload'
+
+const tempFolderFinished = path.join(__dirname,'..','..','tmp','finished')
 //Mongoose
 const mongoose = require('mongoose');
 require('dotenv').config({path: '../../.env'});
@@ -29,7 +34,7 @@ const connection = new IORedis({
     password: process.env.REDIS_PASSWORD
 });
 
-const videoWorker = new Worker('videoQueue', videoWorkerFile, {connection, concurrency: 1});
+const videoWorker = new Worker('videoQueue', videoWorkerFile, {connection, concurrency: 2});
 
 videoWorker.on('completed', async (job) => {
     //console.log(`${job.id} has completed!`);
@@ -47,5 +52,17 @@ videoWorker.on('completed', async (job) => {
     fs.unlink(job.data.mp4File, (err) => {
         if (err) throw err;
         //console.log('The file was deleted');
-    }); 
+    });
+
+    fs.readdir(tempFolderFinished,(files,err) =>{
+        files.forEach(file => {
+            if(file.name.includes(newuid)){
+                fs.readFile(file.parentPath,(err,data) =>{
+                    const form = new FormData();
+                    form.append('file',data)
+                    axios.post(videoStore, form)
+                })
+            }
+        })
+    })
 });
