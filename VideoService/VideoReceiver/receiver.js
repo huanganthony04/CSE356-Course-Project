@@ -30,10 +30,8 @@ app.post('/',(req, res) => {
 
     });
     bb.on('finish', function() {
-
         res.status(200).json({status: 'OK'})
        
-
     });
     
     req.pipe(bb);
