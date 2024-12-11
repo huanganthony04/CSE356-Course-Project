@@ -147,3 +147,5 @@ nohup.out
 /backup-database
 mongodb_shards/keyfile.txt
 /.vscode
+
+./Recommender/tests.js

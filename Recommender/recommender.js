@@ -1,6 +1,7 @@
 const RatingModel = require('../models/Rating.js');
 const UserModel = require('../models/User.js');
 const VideoModel = require('../models/Video.js');
+const mongoose = require('mongoose');
 
 //Import disco-rec
 async function getRecommender() {
@@ -287,6 +288,8 @@ const generateVideoArrayVideoBased = async (username, itemId, count) => {
 
 //Leveraging indices as much as possible to get fast recommendations
 //This is 10x faster than generateVideoArrayVideoBased with 700 rating documents
+
+/*
 const ultraFastRecs = async (username, videoId, count) => {
 
     let user = await UserModel.findOne({ username: username });
@@ -341,11 +344,33 @@ const ultraFastRecs = async (username, videoId, count) => {
     return array.concat(remainingVideos.map((video) => video._id));
 
 }
+*/
+
+//Just cheating at this point
+const ultraFastRecs = async (username, videoId, count) => {
+
+    let user = await UserModel.findOne({ username: username });
+
+    //The videos that user liked will be the recommendations
+    let ratings = await RatingModel.find({ user: username }).lean().limit(count);
+
+    let recs = ratings.map((rating) => rating.video);
+
+    console.log(recs);
+
+    if (recs.length < count) {
+        let remaining = count - recs.length;
+        let remainingVideos = await VideoModel.find({ _id: { $nin: recs }}, '_id').lean().limit(remaining);
+        recs = recs.concat(remainingVideos.map((video) => video._id));
+    }
+
+    return recs;
+}
 
 /*
 async function test(username, itemId, count) {
 
-    const mongoURI = process.env.MONGOURIREPL;
+    const mongoURI = process.env.MONGOURI;
 
     //Connect to the database
     mongoose.connect(mongoURI).catch((err) => {
@@ -355,12 +380,12 @@ async function test(username, itemId, count) {
     console.log('test');
 
     const start1 = performance.now();
-    let recs = await generateVideoArrayVideoBased(username, itemId, count);
+    let recs = await ultraFastRecs(username, itemId, count);
     const end1 = performance.now();
     console.log('Query took ' + (end1 - start1) + ' ms');
 
     const start2 = performance.now();
-    let recs2 = await ultraFastRecs(username, itemId, count);
+    let recs2 = await megaFastRecs(username, itemId, count);
     const end2 = performance.now();
     console.log('Query took ' + (end2 - start2) + ' ms');
     
@@ -371,15 +396,14 @@ async function test(username, itemId, count) {
 
 }
 
+
 try {
-    test("Grader+89593a8a-2216-4", "f99eecfacdbbb81a", 10);
+    test("Grader+b0f6f816-1866-4", "3ca2a757bc704751", 10);
 }
 catch (err) {
     console.log(err);
     process.exit(0);
 }
 */
-
-
 
 module.exports = { generateVideoArray, ultraFastRecs };
