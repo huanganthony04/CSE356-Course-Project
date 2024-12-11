@@ -70,6 +70,6 @@ ffmpeg -i $1 \
     -b:v:1 768k -c:v:1 libx264 -filter:v:1 "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:-1:-1:color=black"  \
     -b:v:2 1024k -c:v:2 libx264 -filter:v:2 "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:-1:-1:color=black" \
     -use_timeline 1 -use_template 1 -window_size 5 -seg_duration 10 -media_seg_name "${2}_chunk_\$Bandwidth\$_\$Number\$.m4s" -init_seg_name "${2}_init-stream\$RepresentationID\$.\$ext\$" -adaptation_sets "id=0,streams=v" \
-    -hls_playlist false -f dash ./tmp/finished/$2.mpd;
+    -hls_playlist false -f dash /root/CSE356-Course-Project/tmp/finished/$2.mpd;
 
-ffmpeg -i $1 -vf "thumbnail,scale=320:180:force_original_aspect_ratio=decrease,pad=320:180:(ow-iw)/2:(oh-ih)/2:color=black" -vframes 1 ./tmp/finished/$2.jpg
+ffmpeg -i $1 -vf "thumbnail,scale=320:180:force_original_aspect_ratio=decrease,pad=320:180:(ow-iw)/2:(oh-ih)/2:color=black" -vframes 1 /root/CSE356-Course-Project/tmp/finished/$2.jpg

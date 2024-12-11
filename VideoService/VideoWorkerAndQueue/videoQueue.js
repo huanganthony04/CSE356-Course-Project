@@ -54,15 +54,19 @@ videoWorker.on('completed', async (job) => {
         //console.log('The file was deleted');
     });
 
-    fs.readdir(tempFolderFinished,(files,err) =>{
-        files.forEach(file => {
-            if(file.name.includes(newuid)){
-                fs.readFile(file.parentPath,(err,data) =>{
-                    const form = new FormData();
-                    form.append('file',data)
-                    axios.post(videoStore, form)
-                })
-            }
+    let files = fs.readdir(path.join(__dirname,'..','..','tmp','finished'),{withFileTypes : true},(err,files)=>{
+        let fileset = files.filter((file) => {
+            let name = file.name
+            return name.includes(newuid)})
+
+        fileset.forEach((file) => {
+
+            fs.readFile(path.join(file.parentPath,file.name),(err,data) =>{
+                const form = new FormData();
+                form.append('file',data)
+                axios.post(videoStore, form)
+            })
         })
     })
+    
 });

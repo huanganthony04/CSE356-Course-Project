@@ -21,7 +21,8 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/VideoService/VideoWorkerAndQueue/videoQueue.js"
+            "program": "${workspaceFolder}/VideoService/VideoWorkerAndQueue/videoQueue.js",
+            "runtimeExecutable": "/root/.nvm/versions/node/v23.3.0/bin/node"
         },
         {
             "type": "node",
