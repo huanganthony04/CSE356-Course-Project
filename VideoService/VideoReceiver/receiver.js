@@ -1,6 +1,7 @@
 const express = require('express');
 const busboy = require('busboy')
 const path = require('node:path');
+const fs = require('fs');
 
 const app = express();
 PORT = 8080
@@ -16,16 +17,16 @@ app.post('/',(req, res) => {
     const bb = busboy({ headers: req.headers });
     bb.on('file', function(filename, file, info) {
 
-        let {ext} = path.parse(filename);
+        let {ext} = path.parse(info.filename);
 
         let filePath;
         if(ext == '.jpg'){
-            filePath = path.join(ROOT,'public', 'thumbnails',filename);
+            filePath = path.join(ROOT,'public', 'thumbnails',info.filename);
         }else{
-            filePath = path.join(ROOT,'public', 'media',filename);
+            filePath = path.join(ROOT,'public', 'media',info.filename);
         }
 
-        file.pipe(fs.createWriteStream(tempPathFile));
+        file.pipe(fs.createWriteStream(filePath));
 
     });
     bb.on('finish', function() {
