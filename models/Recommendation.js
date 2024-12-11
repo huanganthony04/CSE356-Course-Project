@@ -5,7 +5,7 @@ const RecommendationSchema = new Schema({
     user: {
         type: String,
         required: true,
-        unique: true
+        index: true
     },
     videoIds: [{
         type: String
