@@ -146,3 +146,4 @@ nohup.out
 /tmp
 /backup-database
 mongodb_shards/keyfile.txt
+/.vscode
