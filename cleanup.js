@@ -21,9 +21,9 @@ const db = mongoose.connection;
 
 async function cleanup() {
     await queue.drain();
-    await UserModel.collection.drop();
-    await RatingModel.collection.drop();
-    await RecommendationModel.collection.drop();
+    await UserModel.collection.deleteMany({});
+    await RatingModel.collection.deleteMany({});
+    await RecommendationModel.collection.deleteMany({});
     await VideoModel.collection.updateMany({}, { $set: { "metadata.likes":0, "metadata.views": 0 } });
     await VideoModel.collection.deleteMany({ "status": "processing" });
 }
