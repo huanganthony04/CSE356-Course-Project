@@ -4,7 +4,7 @@ const path = require('node:path');
 
 const app = express();
 PORT = 8080
-let ROOT = 'mnt/videoStorage'
+let ROOT = __dirname
 app.post('/',(req, res) => {
 
     //Body {file: file}
@@ -16,7 +16,7 @@ app.post('/',(req, res) => {
     const bb = busboy({ headers: req.headers });
     bb.on('file', function(filename, file, info) {
 
-        let {ext} = path.parse('/home/user/dir/file.txt');
+        let {ext} = path.parse(filename);
 
         let filePath;
         if(ext == '.jpg'){
