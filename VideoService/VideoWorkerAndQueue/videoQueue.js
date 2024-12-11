@@ -32,13 +32,13 @@ const connection = new IORedis({
 const videoWorker = new Worker('videoQueue', videoWorkerFile, {connection, concurrency: 1});
 
 videoWorker.on('completed', async (job) => {
-    console.log(`${job.id} has completed!`);
+    //console.log(`${job.id} has completed!`);
 
     let newuid = job.data.uid
     let test = path.join(__dirname);
     fs.appendFile('/root/CSE356-Course-Project/uploads/newvids.log', newuid + '\n', function (err) {
         if (err) throw err;
-        console.log('Saved!');
+        //console.log('Saved!');
     });
     let result = await VideoModel.findOneAndUpdate({_id: newuid},{status: 'complete'},{new:true})
     console.log(result._doc.status)
@@ -46,6 +46,6 @@ videoWorker.on('completed', async (job) => {
     //Delete the temp mp4 file
     fs.unlink(job.data.mp4File, (err) => {
         if (err) throw err;
-        console.log('The file was deleted');
+        //console.log('The file was deleted');
     }); 
 });

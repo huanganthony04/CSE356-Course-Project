@@ -356,57 +356,12 @@ router.post('/api/upload' ,async (req,res) => {
         let insert_result = newvideo.save().catch((err) => {
             console.log("Error saving user: " + err);
         });
-        console.log(tempPathFile)
+        //console.log(tempPathFile)
         videoQueue.add('processVideo', { mp4File : tempPathFile, uid : newuid},{ removeOnComplete: true, removeOnFail: true })
 
     });
     
     req.pipe(bb);
-    // if(!req.file) {
-    //     return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing file'});
-    // }
-    // if(!req.body.author) {
-    //     return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing author'});
-    // }
-    // if(!req.body.title) {
-    //     return res.status(200).json({ status: 'ERROR', error: true, message: 'Missing title'});
-    // }
-    
-    // let newuid;
-    
-    // let description;
-    // if(!req.body.description) {
-    //     description = " "
-    // }else{
-    //     description = req.body.description
-    // }
-    
-    // while(true){
-    //     newuid = crypto.randomBytes(8).toString("hex");
-    //     let existingUID = await VideoModel.findOne({_id: newuid});
-
-    //     if(!existingUID){
-    //         break;
-    //     }
-    // }
-
-    // //Generate the new video record
-    // let newvideo = new VideoModel({
-    //     _id: newuid,
-    //     metadata: {
-    //         title: req.body.title,
-    //         description: description,
-    //         author: req.body.author
-    //     }
-    // });
-
-    // //Insert into database
-    // let insert_result = newvideo.save().catch((err) => {
-    //     console.log("Error saving user: " + err);
-    // });
-    // res.status(200).json({status: 'OK', id: newuid})
-
-    // videoQueue.add('processVideo', { mp4File : req.file.path, uid : newuid},{ removeOnComplete: true, removeOnFail: true })
 });
 router.get('/api/processing-status', isAuth, async (req,res) => {
     let currentUser = req.session.userId
